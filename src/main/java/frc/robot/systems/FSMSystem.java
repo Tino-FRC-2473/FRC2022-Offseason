@@ -95,7 +95,7 @@ public class FSMSystem {
 				break;
 
 			case FORWARD_STATE_10_IN:
-				handleForwardState(input, 10, 10);
+				handleForwardOrBackwardState(input, 10, 10);
 				break;
 
 			default:
@@ -144,11 +144,11 @@ public class FSMSystem {
 		backLeftMotor.set(0);
 	}
 
-	//Assume power for both left and right are 10
-	public void handleForwardState(TeleopInput input, double inches) {
+	//Assume encoder positions are at 0 initially
+	public void handleForwardOrBackwardState(TeleopInput input, double inches) {
 		double currentPos_inches = frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
-		double error = currentPos_inches - inches;
-		double speed = kP * error;
+		double error = inches - currentPos_inches;
+		double speed = kP * error; //Negative if inches is negative
 
 		frontLeftMotor.set(speed);
 		frontRightMotor.set(speed);
