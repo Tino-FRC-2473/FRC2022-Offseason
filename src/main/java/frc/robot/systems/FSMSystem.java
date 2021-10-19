@@ -1,6 +1,7 @@
 package frc.robot.systems;
 
 // WPILib Imports
+import edu.wpi.first.wpilibj.Joystick;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
@@ -14,7 +15,7 @@ public class FSMSystem {
 	// FSM state definitions
 	public enum FSMState {
 		START_STATE,
-		OTHER_STATE
+		TELEOP_STATE
 	}
 
 	private static final float MOTOR_RUN_POWER = 0.1f;
@@ -22,9 +23,20 @@ public class FSMSystem {
 	/* ======================== Private variables ======================== */
 	private FSMState currentState;
 
+	public static final int WHEEL_PORT = 0;
+	public static final int JOYSTICK_PORT = 1;
+
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
-	private CANSparkMax exampleMotor;
+	//private CANSparkMax exampleMotor;
+
+	private CANSparkMax frontRightMotor;
+	private CANSparkMax backRightMotor;
+	private CANSparkMax frontLeftMotor;
+	private CANSparkMax backLeftMotor;
+
+	private Joystick wheel;
+	private Joystick stick;
 
 	/* ======================== Constructor ======================== */
 	/**
@@ -34,9 +46,17 @@ public class FSMSystem {
 	 */
 	public FSMSystem() {
 		// Perform hardware init
-		exampleMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_SHOOTER,
-										CANSparkMax.MotorType.kBrushless);
+		//exampleMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_SHOOTER,
+										//CANSparkMax.MotorType.kBrushless);
 
+		frontRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_RIGHT, CANSparkMax.MotorType.kBrushless);
+		frontLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_LEFT, CANSparkMax.MotorType.kBrushless);
+		backRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_RIGHT, CANSparkMax.MotorType.kBrushless);
+		backLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT, CANSparkMax.MotorType.kBrushless);
+
+		wheel = new Joystick(WHEEL_PORT);
+		stick = new Joystick(JOYSTICK_PORT);
+		
 		// Reset state machine
 		reset();
 	}
@@ -75,8 +95,8 @@ public class FSMSystem {
 				handleStartState(input);
 				break;
 
-			case OTHER_STATE:
-				handleOtherState(input);
+			case TELEOP_STATE:
+				handleTeleOpState(input);
 				break;
 
 			default:
@@ -99,13 +119,13 @@ public class FSMSystem {
 		switch (currentState) {
 			case START_STATE:
 				if (input != null) {
-					return FSMState.OTHER_STATE;
+					return FSMState.TELEOP_STATE;
 				} else {
 					return FSMState.START_STATE;
 				}
 
-			case OTHER_STATE:
-				return FSMState.OTHER_STATE;
+			case TELEOP_STATE:
+				return FSMState.TELEOP_STATE;
 
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
@@ -119,14 +139,47 @@ public class FSMSystem {
 	 *        the robot is in autonomous mode.
 	 */
 	private void handleStartState(TeleopInput input) {
-		exampleMotor.set(0);
-	}
+        frontRightMotor.set(0);
+        frontLeftMotor.set(0);
+        backRightMotor.set(0);
+        backLeftMotor.set(0);
+    }
 	/**
 	 * Handle behavior in OTHER_STATE.
 	 * @param input Global TeleopInput if robot in teleop mode or null if
 	 *        the robot is in autonomous mode.
 	 */
-	private void handleOtherState(TeleopInput input) {
-		exampleMotor.set(MOTOR_RUN_POWER);
+	private void handleTeleOpState(TeleopInput input) {
+		double leftPower = -stick.getY() * (1 + wheel.getDirectionDegrees() / 90);
+		double rightPower = stick.getY() * (1 - wheel.getDirectionDegrees() / 90);
+		
+		// double scalar;
+
+		// if(Math.abs(leftPower) > 1){
+		// 	if(Math.abs(leftPower) > Math.abs(rightPower)){
+		// 		scalar = Math.abs(1 / leftPower);
+		// 		leftPower *= scalar;
+		// 		rightPower *= scalar;
+		// 	}
+		// }else if(Math.abs(rightPower) > 1){
+		// 	if(Math.abs(leftPower) < Math.abs(rightPower)){
+		// 		scalar = Math.abs(1 / rightPower);
+		// 		leftPower *= scalar;
+		// 		rightPower *= scalar;
+		// 	}
+		// }
+
+		limitPower(leftPower);
+		limitPower(rightPower);
+
+		frontRightMotor.set(rightPower);
+        frontLeftMotor.set(leftPower);
+        backRightMotor.set(rightPower);
+        backLeftMotor.set(leftPower);
+	}
+
+	private void limitPower(double number){
+		if(number > 1) number = 1;
+		if(number < -1) number = -1;
 	}
 }
