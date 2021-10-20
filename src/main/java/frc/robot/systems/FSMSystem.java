@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj.Joystick;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.ControlType;
 
 // Robot Imports
 import frc.robot.TeleopInput;
@@ -12,9 +14,13 @@ import frc.robot.HardwareMap;
 
 public class FSMSystem {
 	/* ======================== Constants ======================== */
+	public static final double WHEEL_DIAMETER_INCHES = 7.65;
+	public static final double kP = 0.1;
 	// FSM state definitions
 	public enum FSMState {
 		START_STATE,
+		FORWARD_STATE_10_IN,
+		TURN_RIGHT,
 		TELEOP_STATE
 	}
 
@@ -57,6 +63,10 @@ public class FSMSystem {
 		wheel = new Joystick(WHEEL_PORT);
 		stick = new Joystick(JOYSTICK_PORT);
 		
+		frontRightMotor.getEncoder().setPosition(0);
+		frontLeftMotor.getEncoder().setPosition(0);
+		backRightMotor.getEncoder().setPosition(0);
+		backLeftMotor.getEncoder().setPosition(0);
 		// Reset state machine
 		reset();
 	}
@@ -97,6 +107,10 @@ public class FSMSystem {
 
 			case TELEOP_STATE:
 				handleTeleOpState(input);
+                break;
+                
+			case FORWARD_STATE_10_IN:
+				handleForwardOrBackwardState(input, 10, 10);
 				break;
 
 			default:
@@ -126,6 +140,9 @@ public class FSMSystem {
 
 			case TELEOP_STATE:
 				return FSMState.TELEOP_STATE;
+                
+			case FORWARD_STATE_10_IN:
+				return FSMState.TURN_RIGHT;
 
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
@@ -176,6 +193,18 @@ public class FSMSystem {
         frontLeftMotor.set(leftPower);
         backRightMotor.set(rightPower);
         backLeftMotor.set(leftPower);
+    }
+    
+	//Assume encoder positions are at 0 initially
+	public void handleForwardOrBackwardState(TeleopInput input, double inches) {
+		double currentPos_inches = frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
+		double error = inches - currentPos_inches;
+		double speed = kP * error; //Negative if inches is negative
+
+		frontLeftMotor.set(speed);
+		frontRightMotor.set(speed);
+		backLeftMotor.set(speed);
+		backRightMotor.set(speed);
 	}
 
 	private void limitPower(double number){
