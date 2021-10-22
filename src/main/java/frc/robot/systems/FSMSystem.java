@@ -7,6 +7,8 @@ import edu.wpi.first.wpilibj.Joystick;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.ControlType;
+import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.wpilibj.SPI;
 
 // Robot Imports
 import frc.robot.TeleopInput;
@@ -20,7 +22,7 @@ public class FSMSystem {
 	public enum FSMState {
 		START_STATE,
 		FORWARD_STATE_10_IN,
-		TURN_RIGHT,
+		TURN_STATE,
 		TELEOP_STATE
 	}
 
@@ -44,6 +46,7 @@ public class FSMSystem {
 	private Joystick wheel;
 	private Joystick stick;
 
+	AHRS gyro;
 	/* ======================== Constructor ======================== */
 	/**
 	 * Create FSMSystem and initialize to starting state. Also perform any
@@ -62,6 +65,10 @@ public class FSMSystem {
 
 		wheel = new Joystick(WHEEL_PORT);
 		stick = new Joystick(JOYSTICK_PORT);
+
+		gyro = new AHRS(SPI.Port.kMXP);
+		gyro.reset();
+		gyro.zeroYaw();
 		
 		frontRightMotor.getEncoder().setPosition(0);
 		frontLeftMotor.getEncoder().setPosition(0);
@@ -113,6 +120,10 @@ public class FSMSystem {
 				handleForwardOrBackwardState(input, 10, 10);
 				break;
 
+			case TURN_STATE:
+				handleTurnState(input, 90); // test 90 degrees
+				break;
+
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
 		}
@@ -143,6 +154,9 @@ public class FSMSystem {
                 
 			case FORWARD_STATE_10_IN:
 				return FSMState.TURN_RIGHT;
+
+			case TURN_STATE:
+				return FSMState.START_STATE;
 
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
@@ -207,8 +221,26 @@ public class FSMSystem {
 		backRightMotor.set(speed);
 	}
 
+	public void handleTurnState(TeleopInput input, double degrees) { // turn x degrees, +x is right, -x is left
+		double error = degrees - getHeading();
+		double power = Math.abs(error / 360) * (error < 0 ? -1 : 1)
+
+		frontLeftMotor.set(power);
+		frontRightMotor.set(power);
+		backLeftMotor.set(power;
+		backRightMotor.set(power);
+	}
+
+	public double getHeading() {
+		return -Math.IEEEremainder(gyro.getAngle(), 360);
+	}
+
 	private void limitPower(double number){
-		if(number > 1) number = 1;
-		if(number < -1) number = -1;
+		if(number > 1) {
+			number = 1;
+		}
+		if(number < -1) {
+			number = -1;
+		}
 	}
 }
