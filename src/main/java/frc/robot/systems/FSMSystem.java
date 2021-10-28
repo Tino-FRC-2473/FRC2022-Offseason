@@ -105,7 +105,7 @@ public class FSMSystem {
             default:
                 throw new IllegalStateException("Invalid state: " + currentState.toString());
         }
-        tempCurrState = currentState;
+        FSMState tempCurrState = currentState;
         currentState = nextState(input);
 
         if(tempCurrState != currentState)
@@ -201,7 +201,7 @@ public class FSMSystem {
         */
     private void handleRunBackwardState(TeleopInput input) {
         armActuator.set(true);
-        shooterMotor.set(-MOTOR_SHOOTING_POWER);
+        shooterMotor.set(0);
         intakeMotor.set(-MOTOR_INTAKE_POWER);
         transportMotor.set(-MOTOR_TRANSPORT_POWER);
     }
