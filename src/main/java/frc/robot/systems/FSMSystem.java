@@ -4,6 +4,8 @@ package frc.robot.systems;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.ControlType;
 
 // Robot Imports
 import frc.robot.TeleopInput;
@@ -11,10 +13,13 @@ import frc.robot.HardwareMap;
 
 public class FSMSystem {
 	/* ======================== Constants ======================== */
+	public static final double WHEEL_DIAMETER_INCHES = 7.65;
+	public static final double kP_move_straight = 0.1;
 	// FSM state definitions
 	public enum FSMState {
 		START_STATE,
-		TELEOP_STATE
+		FORWARD_STATE_10_IN,
+		TURN_RIGHT
 	}
 
 	private static final float MOTOR_RUN_POWER = 0.1f;
@@ -31,6 +36,7 @@ public class FSMSystem {
 	private CANSparkMax frontLeftMotor;
 	private CANSparkMax backLeftMotor;
 
+
 	/* ======================== Constructor ======================== */
 	/**
 	 * Create FSMSystem and initialize to starting state. Also perform any
@@ -40,12 +46,16 @@ public class FSMSystem {
 	public FSMSystem() {
 		// Perform hardware init
 
+
 		frontRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_RIGHT, CANSparkMax.MotorType.kBrushless);
 		frontLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_LEFT, CANSparkMax.MotorType.kBrushless);
 		backRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_RIGHT, CANSparkMax.MotorType.kBrushless);
 		backLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT, CANSparkMax.MotorType.kBrushless);
 
-		
+		frontRightMotor.getEncoder().setPosition(0);
+		frontLeftMotor.getEncoder().setPosition(0);
+		backRightMotor.getEncoder().setPosition(0);
+		backLeftMotor.getEncoder().setPosition(0);
 		// Reset state machine
 		reset();
 	}
@@ -84,8 +94,8 @@ public class FSMSystem {
 				handleStartState(input);
 				break;
 
-			case TELEOP_STATE:
-				handleTeleOpState(input);
+			case FORWARD_STATE_10_IN:
+				handleForwardOrBackwardState(input, 10, 10);
 				break;
 
 			default:
@@ -108,13 +118,13 @@ public class FSMSystem {
 		switch (currentState) {
 			case START_STATE:
 				if (input != null) {
-					return FSMState.TELEOP_STATE;
+					return FSMState.FORWARD_STATE_10_IN;
 				} else {
 					return FSMState.START_STATE;
 				}
 
-			case TELEOP_STATE:
-				return FSMState.TELEOP_STATE;
+			case FORWARD_STATE_10_IN:
+				return FSMState.TURN_RIGHT;
 
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
@@ -128,47 +138,38 @@ public class FSMSystem {
 	 *        the robot is in autonomous mode.
 	 */
 	private void handleStartState(TeleopInput input) {
-        frontRightMotor.set(0);
-        frontLeftMotor.set(0);
-        backRightMotor.set(0);
-        backLeftMotor.set(0);
-    }
-	/**
-	 * Handle behavior in TELEOP_STATE.
-	 * @param input Global TeleopInput if robot in teleop mode or null if
-	 *        the robot is in autonomous mode.
-	 */
-	private void handleTeleOpState(TeleopInput input) {
-		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
-		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
-		
-		// double scalar;
-
-		// if(Math.abs(leftPower) > 1){
-		// 	if(Math.abs(leftPower) > Math.abs(rightPower)){
-		// 		scalar = Math.abs(1 / leftPower);
-		// 		leftPower *= scalar;
-		// 		rightPower *= scalar;
-		// 	}
-		// }else if(Math.abs(rightPower) > 1){
-		// 	if(Math.abs(leftPower) < Math.abs(rightPower)){
-		// 		scalar = Math.abs(1 / rightPower);
-		// 		leftPower *= scalar;
-		// 		rightPower *= scalar;
-		// 	}
-		// }
-
-		limitPower(leftPower);
-		limitPower(rightPower);
-
-		frontRightMotor.set(rightPower);
-        frontLeftMotor.set(leftPower);
-        backRightMotor.set(rightPower);
-        backLeftMotor.set(leftPower);
+		setPowerForAllMotors(0);
 	}
 
-	private void limitPower(double number){
-		if(number > 1) number = 1;
-		if(number < -1) number = -1;
+	//Assume encoder starts at 0
+	/**
+	* Handle behavior in FORWARD_STATE, or BACKWARD_STATE
+	* @param input Global TeleopInput if robot in teleop mode or null if
+	*        the robot is in autonomous mode.
+	* @param inches The number of inches to move forward or backward
+	*/
+	private void handleForwardOrBackwardState(TeleopInput input, double inches) {
+		double currentPos_inches = frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
+		double error = inches - currentPos_inches;
+		double speed = kP_move_straight * error;
+
+		if(speed >= 1) {
+			setPowerForAllMotors(1);
+		} else if(speed <= -1) {
+			setPowerForAllMotors(-1);
+		} else {
+			setPowerForAllMotors(speed);
+		}
+	}
+	
+	/**
+	* Sets power for all motors
+	* @param power The power to set all the motors to
+	*/
+	public void setPowerForAllMotors(double power) {
+		frontLeftMotor.set(power);
+		frontRightMotor.set(power);
+		backLeftMotor.set(power);
+		backRightMotor.set(power);
 	}
 }
