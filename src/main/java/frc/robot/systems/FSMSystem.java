@@ -14,7 +14,7 @@ import frc.robot.HardwareMap;
 public class FSMSystem {
 	/* ======================== Constants ======================== */
 	public static final double WHEEL_DIAMETER_INCHES = 7.65;
-	public static final double kP = 0.1;
+	public static final double kP_move_straight = 0.1;
 	// FSM state definitions
 	public enum FSMState {
 		START_STATE,
@@ -138,21 +138,38 @@ public class FSMSystem {
 	 *        the robot is in autonomous mode.
 	 */
 	private void handleStartState(TeleopInput input) {
-		frontRightMotor.set(0);
-		frontLeftMotor.set(0);
-		backRightMotor.set(0);
-		backLeftMotor.set(0);
+		setPowerForAllMotors(0);
 	}
 
-	//Assume encoder positions are at 0 initially
-	public void handleForwardOrBackwardState(TeleopInput input, double inches) {
+	//Assume encoder starts at 0
+	/**
+	* Handle behavior in FORWARD_STATE, or BACKWARD_STATE
+	* @param input Global TeleopInput if robot in teleop mode or null if
+	*        the robot is in autonomous mode.
+	* @param inches The number of inches to move forward or backward
+	*/
+	private void handleForwardOrBackwardState(TeleopInput input, double inches) {
 		double currentPos_inches = frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
 		double error = inches - currentPos_inches;
-		double speed = kP * error; //Negative if inches is negative
+		double speed = kP_move_straight * error;
 
-		frontLeftMotor.set(speed);
-		frontRightMotor.set(speed);
-		backLeftMotor.set(speed);
-		backRightMotor.set(speed);
+		if(speed >= 1) {
+			setPowerForAllMotors(1);
+		} else if(speed <= -1) {
+			setPowerForAllMotors(-1);
+		} else {
+			setPowerForAllMotors(speed);
+		}
+	}
+	
+	/**
+	* Sets power for all motors
+	* @param power The power to set all the motors to
+	*/
+	public void setPowerForAllMotors(double power) {
+		frontLeftMotor.set(power);
+		frontRightMotor.set(power);
+		backLeftMotor.set(power);
+		backRightMotor.set(power);
 	}
 }
