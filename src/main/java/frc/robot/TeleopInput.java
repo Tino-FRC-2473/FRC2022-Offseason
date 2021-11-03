@@ -15,11 +15,15 @@ public class TeleopInput {
 	/* ======================== Constants ======================== */
 	private static final int LEFT_JOYSTICK_PORT = 0;
 	private static final int RIGHT_JOYSTICK_PORT = 1;
+	private static final int WHEEL_PORT = 2;
+	private static final int DRIVING_JOYSTICK_PORT = 3;
 
 	/* ======================== Private variables ======================== */
 	// Input objects
 	private Joystick leftJoystick;
 	private Joystick rightJoystick;
+	private Joystick wheel;
+	private Joystick drivingJoystick;
 
 	/* ======================== Constructor ======================== */
 	/**
@@ -28,9 +32,13 @@ public class TeleopInput {
 	 * by WPILib until teleop mode.
 	 */
 	public TeleopInput() {
-		leftJoystick = new Joystick(LEFT_JOYSTICK_PORT);
 
+		leftJoystick = new Joystick(LEFT_JOYSTICK_PORT);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK_PORT);
+
+		wheel = new Joystick(WHEEL_PORT);
+		drivingJoystick = new Joystick(DRIVING_JOYSTICK_PORT);
+
 	}
 
 	/* ======================== Public methods ======================== */
@@ -90,6 +98,25 @@ public class TeleopInput {
 	 */
 	public boolean isRampToggleButtonPressed() {
 		return rightJoystick.getRawButtonPressed(1);
+	}
+
+	/* ------------------------ Wheel ------------------------ */
+	/**
+	 * Get Angle of the steering Wheel.
+	 * @return Angle in degrees
+	 */
+	public double getSteerAngleDegrees() {
+		return wheel.getDirectionDegrees();
+	}
+
+	/* ------------------------ Driving Joystick ------------------------ */
+	
+	/**
+	 * Get Y value of Driving Joystick.
+	 * @return Y-Axis value
+	 */
+	public double getDrivingJoystickY() {
+		return drivingJoystick.getY();
 	}
 
 	/* ======================== Private methods ======================== */
