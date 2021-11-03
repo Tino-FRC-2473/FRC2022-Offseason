@@ -84,13 +84,13 @@ public class TeleopInput {
 		return rightJoystick.getY(GenericHID.Hand.kRight);
 	}
 
-	public boolean isReleaseButtonPressed(){
+	public boolean isRampToggleButtonPressed(){
 		return rightJoystick.getRawButton(1);
 	}
 
-	public boolean isRetractButtonPressed(){
-		return rightJoystick.getRawButton(2);
-	}
+	// public boolean isRetractButtonPressed(){
+	// 	return rightJoystick.getRawButton(2);
+	// }
 
 	/* ======================== Private methods ======================== */
 

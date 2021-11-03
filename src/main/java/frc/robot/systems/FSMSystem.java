@@ -16,10 +16,12 @@ public class FSMSystem {
     /* ======================== Constants ======================== */
     // FSM state definitions
     public enum FSMState {
-        IDLE,
-        RUN_FORWARD,
-        RUN_BACKWARD,
-        RETRACTED
+        RETRACTED,
+        EXTENDED,
+        INTAKING_RETRACTED,
+        INTAKING_EXTENDED,
+        SHOOT_RETRACTED,
+        SHOOT_EXTENDED
     }
     
     private static final float MOTOR_SHOOTING_POWER = 0.2f;
@@ -27,7 +29,9 @@ public class FSMSystem {
     private static final float MOTOR_TRANSPORT_POWER = 0.07f;
     
     /* ======================== Private variables ======================== */
-    private FSMState currentState, previousState;
+    private FSMState currentState;
+
+    private boolean canToggleRamp;
     
     // Hardware devices should be owned by one and only one system. They must
     // be private to their owner system and may not be used elsewhere.
@@ -72,8 +76,9 @@ public class FSMSystem {
         * Ex. if the robot is enabled, disabled, then reenabled.
         */
     public void reset() {
-        previousState = FSMState.RETRACTED;
         currentState = FSMState.RETRACTED;
+
+        canToggleRamp = true;
     
         // Call one tick of update to ensure outputs reflect start state
         update(null);
@@ -86,16 +91,24 @@ public class FSMSystem {
         */
     public void update(TeleopInput input) {
         switch (currentState) {
-            case IDLE:
-                handleIdleState(input);
+            case EXTENDED:
+                handleExtendedState(input);
+                break;
+                
+            case INTAKING_EXTENDED:
+                handleIntakingExtendedState(input);
+                break;
+                
+            case INTAKING_RETRACTED:
+                handleIntakingRetractedState(input);
                 break;
     
-            case RUN_FORWARD:
-                handleRunForwardState(input);
+            case SHOOT_EXTENDED:
+                handleShootExtendedState(input);
                 break;
     
-            case RUN_BACKWARD:
-                handleRunBackwardState(input);
+            case SHOOT_RETRACTED:
+                handleShootRetractedState(input);
                 break;
     
             case RETRACTED:
@@ -105,11 +118,6 @@ public class FSMSystem {
             default:
                 throw new IllegalStateException("Invalid state: " + currentState.toString());
         }
-        FSMState tempCurrState = currentState;
-        currentState = nextState(input);
-
-        if(tempCurrState != currentState)
-            previousState = tempCurrState;
     }
     
     /* ======================== Private methods ======================== */
@@ -127,45 +135,71 @@ public class FSMSystem {
             case RETRACTED:
                 if (input != null) {
                     if(input.isShooterButtonPressed())
-                        return FSMState.RUN_FORWARD;
-                    else if(input.isReleaseButtonPressed())
-                        return FSMState.IDLE;
+                        return FSMState.SHOOT_RETRACTED;
+                    else if(input.isIntakeButtonPressed())
+                        return FSMState.INTAKING_RETRACTED;
+                    else if(input.isRampToggleButtonPressed() && canToggleRamp){
+                        canToggleRamp = false;
+                        return FSMState.EXTENDED;
+                    } else if(!input.isRampToggleButtonPressed())
+                        canToggleRamp = true;
                     else
                         return FSMState.RETRACTED;
                 } else {
                     return FSMState.RETRACTED;
                 }
     
-            case IDLE:
-                if(input != null){
-                    if(input.isIntakeButtonPressed())
-                        return FSMState.RUN_BACKWARD;
-                    else if(input.isShooterButtonPressed())
-                        return FSMState.RUN_FORWARD;
-                    else if(input.isRetractButtonPressed())
-                        return FSMState.RETRACTED;
-                    else
-                        return FSMState.IDLE;
-                } else
-                    return FSMState.IDLE;
-    
-            case RUN_FORWARD:
+            case EXTENDED:
                 if(input != null){
                     if(input.isShooterButtonPressed())
-                        return FSMState.RUN_FORWARD;
+                        return FSMState.SHOOT_EXTENDED;
+                    else if(input.isIntakeButtonPressed())
+                        return FSMState.INTAKING_EXTENDED;
+                    else if(input.isRampToggleButtonPressed() && canToggleRamp){
+                        canToggleRamp = false;
+                        return FSMState.RETRACTED;
+                    } else if(!input.isRampToggleButtonPressed())
+                        canToggleRamp = true;
                     else
-                        return previousState;
-                }else
-                    return FSMState.RUN_INTAKE;
+                        return FSMState.EXTENDED;
+                } else
+                    return FSMState.EXTENDED;
     
-            case RUN_BACKWARD:
+            case SHOOT_EXTENDED:
+                if(input != null){
+                    if(input.isShooterButtonPressed())
+                        return FSMState.SHOOT_EXTENDED;
+                    else
+                        return FSMState.EXTENDED;
+                }else
+                    return FSMState.EXTENDED;
+    
+            case SHOOT_RETRACTED:
+                if(input != null){
+                    if(input.isShooterButtonPressed())
+                        return FSMState.SHOOT_RETRACTED;
+                    else
+                        return FSMState.RETRACTED;
+                }else
+                    return FSMState.RETRACTED;
+
+            case INTAKING_EXTENDED:
                 if(input != null){
                     if(input.isIntakeButtonPressed())
-                        return FSMState.RUN_BACKWARD;
+                        return FSMState.INTAKING_EXTENDED;
                     else
-                        return FSMState.IDLE;
+                        return FSMState.EXTENDED;
                 }else
-                    return FSMState.RUN_INTAKE;
+                    return FSMState.EXTENDED;
+            
+            case INTAKING_RETRACTED:
+                if(input != null){
+                    if(input.isIntakeButtonPressed())
+                        return FSMState.INTAKING_RETRACTED;
+                    else
+                        return FSMState.RETRACTED;
+                }else
+                    return FSMState.RETRACTED;
     
             default:
                 throw new IllegalStateException("Invalid state: " + currentState.toString());
@@ -178,8 +212,19 @@ public class FSMSystem {
         * @param input Global TeleopInput if robot in teleop mode or null if
         *        the robot is in autonomous mode.
         */
-    private void handleIdleState(TeleopInput input) {
+    private void handleExtendedState(TeleopInput input) {
         armActuator.set(true);
+        shooterMotor.set(0);
+        intakeMotor.set(0);
+        transportMotor.set(0);
+    }
+    /**
+    * Handle behavior in OTHER_STATE.
+    * @param input Global TeleopInput if robot in teleop mode or null if
+    *        the robot is in autonomous mode.
+    */
+    private void handleRetractedState(TeleopInput input) {
+        armActuator.set(false);
         shooterMotor.set(0);
         intakeMotor.set(0);
         transportMotor.set(0);
@@ -189,8 +234,9 @@ public class FSMSystem {
         * @param input Global TeleopInput if robot in teleop mode or null if
         *        the robot is in autonomous mode.
         */
-    private void handleRunForwardState(TeleopInput input) {
-        shooterMotor.set(MOTOR_SHOOTING_POWER);
+    private void handleIntakingExtendedState(TeleopInput input) {
+        armActuator.set(true);
+        shooterMotor.set(0);
         intakeMotor.set(MOTOR_INTAKE_POWER);
         transportMotor.set(MOTOR_TRANSPORT_POWER);
     }
@@ -199,20 +245,31 @@ public class FSMSystem {
         * @param input Global TeleopInput if robot in teleop mode or null if
         *        the robot is in autonomous mode.
         */
-    private void handleRunBackwardState(TeleopInput input) {
-        armActuator.set(true);
+    private void handleIntakingRetractedState(TeleopInput input) {
+        armActuator.set(false);
         shooterMotor.set(0);
-        intakeMotor.set(-MOTOR_INTAKE_POWER);
-        transportMotor.set(-MOTOR_TRANSPORT_POWER);
+        intakeMotor.set(MOTOR_INTAKE_POWER);
+        transportMotor.set(MOTOR_TRANSPORT_POWER);
     }
     /**
         * Handle behavior in OTHER_STATE.
         * @param input Global TeleopInput if robot in teleop mode or null if
         *        the robot is in autonomous mode.
         */
-    private void handleRetractedState(TeleopInput input) {
+    private void handleShootExtendedState(TeleopInput input) {
+        armActuator.set(true);
+        shooterMotor.set(MOTOR_SHOOTING_POWER);
+        intakeMotor.set(0);
+        transportMotor.set(0);
+    }
+    /**
+        * Handle behavior in OTHER_STATE.
+        * @param input Global TeleopInput if robot in teleop mode or null if
+        *        the robot is in autonomous mode.
+        */
+    private void handleShootRetractedState(TeleopInput input) {
         armActuator.set(false);
-        shooterMotor.set(0);
+        shooterMotor.set(MOTOR_SHOOTING_POWER);
         intakeMotor.set(0);
         transportMotor.set(0);
     }
