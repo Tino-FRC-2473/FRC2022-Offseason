@@ -1,7 +1,6 @@
 package frc.robot.systems;
 
 // WPILib Imports
-import edu.wpi.first.wpilibj.Joystick;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
@@ -23,9 +22,6 @@ public class FSMSystem {
 	/* ======================== Private variables ======================== */
 	private FSMState currentState;
 
-	public static final int WHEEL_PORT = 0;
-	public static final int JOYSTICK_PORT = 1;
-
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
 	//private CANSparkMax exampleMotor;
@@ -35,9 +31,6 @@ public class FSMSystem {
 	private CANSparkMax frontLeftMotor;
 	private CANSparkMax backLeftMotor;
 
-	private Joystick wheel;
-	private Joystick stick;
-
 	/* ======================== Constructor ======================== */
 	/**
 	 * Create FSMSystem and initialize to starting state. Also perform any
@@ -46,16 +39,12 @@ public class FSMSystem {
 	 */
 	public FSMSystem() {
 		// Perform hardware init
-		//exampleMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_SHOOTER,
-										//CANSparkMax.MotorType.kBrushless);
 
 		frontRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_RIGHT, CANSparkMax.MotorType.kBrushless);
 		frontLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_LEFT, CANSparkMax.MotorType.kBrushless);
 		backRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_RIGHT, CANSparkMax.MotorType.kBrushless);
 		backLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT, CANSparkMax.MotorType.kBrushless);
 
-		wheel = new Joystick(WHEEL_PORT);
-		stick = new Joystick(JOYSTICK_PORT);
 		
 		// Reset state machine
 		reset();
@@ -145,13 +134,13 @@ public class FSMSystem {
         backLeftMotor.set(0);
     }
 	/**
-	 * Handle behavior in OTHER_STATE.
+	 * Handle behavior in TELEOP_STATE.
 	 * @param input Global TeleopInput if robot in teleop mode or null if
 	 *        the robot is in autonomous mode.
 	 */
 	private void handleTeleOpState(TeleopInput input) {
-		double leftPower = -stick.getY() * (1 + wheel.getDirectionDegrees() / 90);
-		double rightPower = stick.getY() * (1 - wheel.getDirectionDegrees() / 90);
+		double leftPower = -input.getRightJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
+		double rightPower = input.getRightJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
 		
 		// double scalar;
 
