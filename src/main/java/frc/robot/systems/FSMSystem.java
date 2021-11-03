@@ -139,8 +139,8 @@ public class FSMSystem {
 	 *        the robot is in autonomous mode.
 	 */
 	private void handleTeleOpState(TeleopInput input) {
-		double leftPower = -input.getRightJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
-		double rightPower = input.getRightJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
+		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
+		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
 		
 		// double scalar;
 
