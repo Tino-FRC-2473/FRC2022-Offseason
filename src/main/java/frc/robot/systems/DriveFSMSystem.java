@@ -1,13 +1,13 @@
 package frc.robot.systems;
 
 // WPILib Imports
+import edu.wpi.first.wpilibj.SPI;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.ControlType;
 import com.kauailabs.navx.frc.AHRS;
-import edu.wpi.first.wpilibj.SPI;
 
 // Robot Imports
 import frc.robot.TeleopInput;
@@ -32,7 +32,6 @@ public class DriveFSMSystem {
 
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
-	//private CANSparkMax exampleMotor;
 
 	private CANSparkMax frontRightMotor;
 	private CANSparkMax backRightMotor;
@@ -195,9 +194,9 @@ public class DriveFSMSystem {
 		backRightMotor.set(power);
 	}
 
-	public void handleTurnState(TeleopInput input, double degrees) { // turn x degrees, +x is right, -x is left
+	private void handleTurnState(TeleopInput input, double degrees) { // turn x degrees, +x is right, -x is left
 		double error = degrees - getHeading();
-		double power = Math.abs(error / 360) * (error < 0 ? -1 : 1);
+		double power = error / 360;
 
 		frontLeftMotor.set(power);
 		frontRightMotor.set(power);
