@@ -80,7 +80,7 @@ public class DriveFSMSystem {
 	 * Ex. if the robot is enabled, disabled, then reenabled.
 	 */
 	public void reset() {
-		currentState = FSMState.START_STATE;
+		currentState = FSMState.TELEOP_STATE;
 
 		// Call one tick of update to ensure outputs reflect start state
 		update(null);
@@ -209,6 +209,7 @@ public class DriveFSMSystem {
 	}
 
 	private void handleTeleOpState(TeleopInput input) {
+		if(input == null) return;
 		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
 		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
 
