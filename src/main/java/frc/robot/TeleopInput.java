@@ -110,7 +110,6 @@ public class TeleopInput {
 	}
 
 	/* ------------------------ Driving Joystick ------------------------ */
-	
 	/**
 	 * Get Y value of Driving Joystick.
 	 * @return Y-Axis value
