@@ -1,12 +1,9 @@
 package frc.robot.systems;
 
 // WPILib Imports
-import edu.wpi.first.wpilibj.SPI;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel;
-import com.revrobotics.ControlType;
 import com.kauailabs.navx.frc.AHRS;
 
 // Robot Imports
@@ -16,7 +13,7 @@ import frc.robot.HardwareMap;
 public class DriveFSMSystem {
 	/* ======================== Constants ======================== */
 	public static final double WHEEL_DIAMETER_INCHES = 7.65;
-	public static final double kP_move_straight = 0.1;
+	public static final double KP_MOVE_STRAIGHT = 0.1;
 	// FSM state definitions
 	public enum FSMState {
 		START_STATE,
@@ -49,16 +46,20 @@ public class DriveFSMSystem {
 	public DriveFSMSystem() {
 		// Perform hardware init
 
-		frontRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_RIGHT, CANSparkMax.MotorType.kBrushless);
-		frontLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_LEFT, CANSparkMax.MotorType.kBrushless);
-		backRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_RIGHT, CANSparkMax.MotorType.kBrushless);
-		backLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT, CANSparkMax.MotorType.kBrushless);
+		frontRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_RIGHT, 
+											CANSparkMax.MotorType.kBrushless);
+		frontLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_LEFT, 
+											CANSparkMax.MotorType.kBrushless);
+		backRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_RIGHT, 
+											CANSparkMax.MotorType.kBrushless);
+		backLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT, 
+											CANSparkMax.MotorType.kBrushless);
 
-		
 		frontRightMotor.getEncoder().setPosition(0);
 		frontLeftMotor.getEncoder().setPosition(0);
 		backRightMotor.getEncoder().setPosition(0);
 		backLeftMotor.getEncoder().setPosition(0);
+
 		// Reset state machine
 		reset();
 	}
@@ -168,11 +169,11 @@ public class DriveFSMSystem {
 	*/
 
 	//Assume encoder positions are at 0 initially
-	public void handleForwardOrBackwardState(TeleopInput input, double inches) {
+	private void handleForwardOrBackwardState(TeleopInput input, double inches) {
 		double currentPos_inches = 
 			frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
 		double error = inches - currentPos_inches;
-		double speed = kP_move_straight * error;
+		double speed = KP_MOVE_STRAIGHT * error;
 
 		if(speed >= 1) {
 			setPowerForAllMotors(1);
@@ -187,7 +188,7 @@ public class DriveFSMSystem {
 	* Sets power for all motors
 	* @param power The power to set all the motors to
 	*/
-	public void setPowerForAllMotors(double power) {
+	private void setPowerForAllMotors(double power) {
 		frontLeftMotor.set(power);
 		frontRightMotor.set(power);
 		backLeftMotor.set(power);
@@ -204,7 +205,7 @@ public class DriveFSMSystem {
 		backRightMotor.set(power);
 	}
 
-	public double getHeading() {
+	private double getHeading() {
 		return -Math.IEEEremainder(gyro.getAngle(), 360);
 	}
 
@@ -223,10 +224,10 @@ public class DriveFSMSystem {
 	}
 
 	private void limitPower(double number){
-		if(number > 1) {
+		if (number > 1) {
 			number = 1;
 		}
-		if(number < -1) {
+		if (number < -1) {
 			number = -1;
 		}
 	}
