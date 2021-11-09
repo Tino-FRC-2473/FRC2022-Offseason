@@ -4,8 +4,6 @@ package frc.robot.systems;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel;
-import com.revrobotics.ControlType;
 
 // Robot Imports
 import frc.robot.TeleopInput;
@@ -15,7 +13,7 @@ public class FSMSystem {
 	/* ======================== Constants ======================== */
 	public static final double WHEEL_DIAMETER_INCHES = 7.65;
 	public static final double KP_MOVE_STRAIGHT = 0.1;
-	public static final double ERROR_THRESHOLD_STRAIGHT_INCHES = 0.1;
+	public static final double ERR_THRESHOLD_STRAIGHT_IN = 0.1;
 	
 	// FSM state definitions
 	public enum FSMState {
@@ -49,11 +47,15 @@ public class FSMSystem {
 	public FSMSystem() {
 		// Perform hardware init
 
+		frontRightID = HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_RIGHT;
+		frontLeftID = HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_LEFT;
+		backRightID = HardwareMap.CAN_ID_SPARK_DRIVE_BACK_RIGHT;
+		backLeftID = HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT;
 
-		frontRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_RIGHT, CANSparkMax.MotorType.kBrushless);
-		frontLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_LEFT, CANSparkMax.MotorType.kBrushless);
-		backRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_RIGHT, CANSparkMax.MotorType.kBrushless);
-		backLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT, CANSparkMax.MotorType.kBrushless);
+		frontRightMotor = new CANSparkMax(frontRightID, CANSparkMax.MotorType.kBrushless);
+		frontLeftMotor = new CANSparkMax(frontLeftID, CANSparkMax.MotorType.kBrushless);
+		backRightMotor = new CANSparkMax(backRightID, CANSparkMax.MotorType.kBrushless);
+		backLeftMotor = new CANSparkMax(backLeftID, CANSparkMax.MotorType.kBrushless);
 
 		frontRightMotor.getEncoder().setPosition(0);
 		frontLeftMotor.getEncoder().setPosition(0);
@@ -159,9 +161,9 @@ public class FSMSystem {
 	* @param inches The number of inches to move forward or backward
 	*/
 	private void handleForwardOrBackwardState(TeleopInput input, double inches) {
-		double currentPos_inches = frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
-		double error = inches - currentPos_inches;
-		if(error < ERROR_THRESHOLD_STRAIGHT_INCHES) {
+		double currentPosInches = frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
+		double error = inches - currentPosInches;
+		if(error < ERR_THRESHOLD_STRAIGHT_IN) {
 			finishedMovingStraight = true;
 		}
 		double speed = KP_MOVE_STRAIGHT * error;
@@ -176,8 +178,8 @@ public class FSMSystem {
 	}
 	
 	/**
-	* Sets power for all motors
-	* @param power The power to set all the motors to
+	* Sets power for all motors.
+	* @param power The power to set all the motors.
 	*/
 	public void setPowerForAllMotors(double power) {
 		frontLeftMotor.set(power);
