@@ -14,7 +14,9 @@ import frc.robot.HardwareMap;
 public class FSMSystem {
 	/* ======================== Constants ======================== */
 	public static final double WHEEL_DIAMETER_INCHES = 7.65;
-	public static final double kP_move_straight = 0.1;
+	public static final double KP_MOVE_STRAIGHT = 0.1;
+	public static final double ERROR_THRESHOLD_STRAIGHT_INCHES = 0.1;
+	
 	// FSM state definitions
 	public enum FSMState {
 		START_STATE,
@@ -26,6 +28,7 @@ public class FSMSystem {
 
 	/* ======================== Private variables ======================== */
 	private FSMState currentState;
+	private boolean finishedMovingStraight;
 
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
@@ -56,6 +59,9 @@ public class FSMSystem {
 		frontLeftMotor.getEncoder().setPosition(0);
 		backRightMotor.getEncoder().setPosition(0);
 		backLeftMotor.getEncoder().setPosition(0);
+
+		finishedMovingStraight = false;
+
 		// Reset state machine
 		reset();
 	}
@@ -124,8 +130,12 @@ public class FSMSystem {
 				}
 
 			case FORWARD_STATE_10_IN:
-				return FSMState.TURN_RIGHT;
-
+				if(finishedMovingStraight) {
+					finishedMovingStraight = false;
+					return FSMState.TURN_RIGHT;
+				} else {
+					return FORWARD_STATE_10_IN;
+				}
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
 		}
@@ -138,7 +148,7 @@ public class FSMSystem {
 	 *        the robot is in autonomous mode.
 	 */
 	private void handleStartState(TeleopInput input) {
-		setPowerForAllMotors(0);
+		setPowerForAllMotors(0); //start with all motors set to 0
 	}
 
 	//Assume encoder starts at 0
@@ -151,7 +161,10 @@ public class FSMSystem {
 	private void handleForwardOrBackwardState(TeleopInput input, double inches) {
 		double currentPos_inches = frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
 		double error = inches - currentPos_inches;
-		double speed = kP_move_straight * error;
+		if(error < ERROR_THRESHOLD_STRAIGHT_INCHES) {
+			finishedMovingStraight = true;
+		}
+		double speed = KP_MOVE_STRAIGHT * error;
 
 		if(speed >= 1) {
 			setPowerForAllMotors(1);
