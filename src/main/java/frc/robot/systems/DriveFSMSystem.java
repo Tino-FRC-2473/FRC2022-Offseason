@@ -160,12 +160,13 @@ public class DriveFSMSystem {
 				}
 
 			case TURN_STATE:
-				if(finishedTurning) {
+				if (finishedTurning) {
 					finishedTurning = false;
 					return FSMState.TELEOP_STATE;
-				}else {
+				} else {
 					return FSMState.TURN_STATE;
 				}
+
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
 		}
@@ -186,6 +187,8 @@ public class DriveFSMSystem {
 	* @param input Global TeleopInput if robot in teleop mode or null if
 	*        the robot is in autonomous mode.
 	* @param inches The number of inches to move forward or backward
+	* @param initialEncoderPos The encoder position of the front left motor 
+	* when the state/handler method was first initiated
 	*/
 	private void handleForwardOrBackwardState(TeleopInput input, double inches, double initialEncoderPos) {
 		forwardStateInitialEncoderPos = initialEncoderPos;
@@ -220,12 +223,12 @@ public class DriveFSMSystem {
 	// turn x degrees, +x is right, -x is left
 	private void handleTurnState(TeleopInput input, double degrees) {
 		double error = degrees - getHeading();
-		if(error <= TURN_ERROR_THRESHOLD_DEGREE) {
+		if (error <= TURN_ERROR_THRESHOLD_DEGREE) {
 			finishedTurning = true;
 			return;
 		}
 		double power = error / TURN_ERROR_POWER_RATIO;
-		if(Math.abs(power) < MIN_TURN_POWER) {
+		if (Math.abs(power) < MIN_TURN_POWER) {
 			power = MIN_TURN_POWER * power < 0 ? -1 : 1;
 		}
 
