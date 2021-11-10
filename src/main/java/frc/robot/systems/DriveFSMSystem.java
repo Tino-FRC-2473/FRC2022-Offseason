@@ -115,7 +115,8 @@ public class DriveFSMSystem {
 				break;
 
 			case FORWARD_STATE_10_IN:
-				handleForwardOrBackwardState(input, 10, forwardStateInitialEncoderPos != -1 ? forwardStateInitialEncoderPos : frontLeftMotor.getEncoder().getPosition());
+				handleForwardOrBackwardState(input, 10,
+					forwardStateInitialEncoderPos != -1 ? forwardStateInitialEncoderPos : frontLeftMotor.getEncoder().getPosition());
 				break;
 
 			case TURN_STATE:
@@ -187,10 +188,12 @@ public class DriveFSMSystem {
 	* @param input Global TeleopInput if robot in teleop mode or null if
 	*        the robot is in autonomous mode.
 	* @param inches The number of inches to move forward or backward
-	* @param initialEncoderPos The encoder position of the front left motor 
+	* @param initialEncoderPos The encoder position of the front left motor
 	* when the state/handler method was first initiated
 	*/
-	private void handleForwardOrBackwardState(TeleopInput input, double inches, double initialEncoderPos) {
+	private void handleForwardOrBackwardState(TeleopInput input,
+		double inches, double initialEncoderPos) {
+			
 		forwardStateInitialEncoderPos = initialEncoderPos;
 		double positionRev = frontLeftMotor.getEncoder().getPosition() - initialEncoderPos;
 		double currentPosInches = positionRev * Math.PI * WHEEL_DIAMETER_INCHES;
