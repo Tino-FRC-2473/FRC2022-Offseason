@@ -103,7 +103,8 @@ public class FSMSystem {
 				break;
 
 			case FORWARD_STATE_10_IN:
-				handleForwardOrBackwardState(input, 10, 10);
+				double inchesToMove = 10;
+				handleForwardOrBackwardState(input, inchesToMove, inchesToMove);
 				break;
 
 			default:
