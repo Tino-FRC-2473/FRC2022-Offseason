@@ -237,10 +237,10 @@ public class DriveFSMSystem {
 	}
 
 	private void limitPower(double number){
-		if(number > 1) {
+		if(number > 1) { 
 			number = 1;
 		}
-		if(number < -1) {
+		if(number < -1) { 
 			number = -1;
 		}
 	}
