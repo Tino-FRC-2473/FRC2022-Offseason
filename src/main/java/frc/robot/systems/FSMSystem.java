@@ -14,7 +14,7 @@ public class FSMSystem {
 	public static final double WHEEL_DIAMETER_INCHES = 7.65;
 	public static final double KP_MOVE_STRAIGHT = 0.1;
 	public static final double ERR_THRESHOLD_STRAIGHT_IN = 0.1;
-	
+
 	// FSM state definitions
 	public enum FSMState {
 		START_STATE,
@@ -132,7 +132,7 @@ public class FSMSystem {
 				}
 
 			case FORWARD_STATE_10_IN:
-				if(finishedMovingStraight) {
+				if (finishedMovingStraight) {
 					finishedMovingStraight = false;
 					return FSMState.TURN_RIGHT;
 				} else {
@@ -155,22 +155,23 @@ public class FSMSystem {
 
 	//Assume encoder starts at 0
 	/**
-	* Handle behavior in FORWARD_STATE, or BACKWARD_STATE
+	* Handle behavior in FORWARD_STATE, or BACKWARD_STATE.
 	* @param input Global TeleopInput if robot in teleop mode or null if
 	*        the robot is in autonomous mode.
 	* @param inches The number of inches to move forward or backward
 	*/
 	private void handleForwardOrBackwardState(TeleopInput input, double inches) {
-		double currentPosInches = frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
+		double positionRev = frontLeftMotor.getEncoder().getPosition();
+		double currentPosInches = positionRev * Math.PI * WHEEL_DIAMETER_INCHES;
 		double error = inches - currentPosInches;
-		if(error < ERR_THRESHOLD_STRAIGHT_IN) {
+		if (error < ERR_THRESHOLD_STRAIGHT_IN) {
 			finishedMovingStraight = true;
 		}
 		double speed = KP_MOVE_STRAIGHT * error;
 
-		if(speed >= 1) {
+		if (speed >= 1) {
 			setPowerForAllMotors(1);
-		} else if(speed <= -1) {
+		} else if (speed <= -1) {
 			setPowerForAllMotors(-1);
 		} else {
 			setPowerForAllMotors(speed);
