@@ -128,5 +128,5 @@ public class FSMSystem {
 	 */
 	private void handleOtherState(TeleopInput input) {
 		exampleMotor.set(MOTOR_RUN_POWER);
-    }
+	}
 }

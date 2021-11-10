@@ -38,7 +38,7 @@ public class DriveFSMSystem {
 	private CANSparkMax frontLeftMotor;
 	private CANSparkMax backLeftMotor;
 
-	AHRS gyro;
+	private AHRS gyro;
 
 	/* ======================== Constructor ======================== */
 	/**
@@ -49,13 +49,13 @@ public class DriveFSMSystem {
 	public DriveFSMSystem() {
 		// Perform hardware init
 
-		frontRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_RIGHT, 
+		frontRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_RIGHT,
 											CANSparkMax.MotorType.kBrushless);
-		frontLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_LEFT, 
+		frontLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_FRONT_LEFT,
 											CANSparkMax.MotorType.kBrushless);
-		backRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_RIGHT, 
+		backRightMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_RIGHT,
 											CANSparkMax.MotorType.kBrushless);
-		backLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT, 
+		backLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT,
 											CANSparkMax.MotorType.kBrushless);
 
 		frontRightMotor.getEncoder().setPosition(0);
@@ -105,8 +105,8 @@ public class DriveFSMSystem {
 
 			case TELEOP_STATE:
 				handleTeleOpState(input);
-                break;
-                
+				break;
+				
 			case FORWARD_STATE_10_IN:
 				handleForwardOrBackwardState(input, 10);
 				break;
@@ -142,7 +142,7 @@ public class DriveFSMSystem {
 
 			case TELEOP_STATE:
 				return FSMState.TELEOP_STATE;
-            
+
 			case FORWARD_STATE_10_IN:
 				if (finishedMovingStraight) {
 					finishedMovingStraight = false;
@@ -188,9 +188,9 @@ public class DriveFSMSystem {
 			setPowerForAllMotors(speed);
 		}
 	}
-	
+
 	/**
-	* Sets power for all motors
+	* Sets power for all motors.
 	* @param power The power to set all the motors to
 	*/
 	private void setPowerForAllMotors(double power) {
@@ -200,7 +200,8 @@ public class DriveFSMSystem {
 		backRightMotor.set(power);
 	}
 
-	private void handleTurnState(TeleopInput input, double degrees) { // turn x degrees, +x is right, -x is left
+	// turn x degrees, +x is right, -x is left
+	private void handleTurnState(TeleopInput input, double degrees) {
 		double error = degrees - getHeading();
 		double power = error / 360;
 
@@ -210,6 +211,9 @@ public class DriveFSMSystem {
 		backRightMotor.set(-power);
 	}
 
+	/**
+	* Gets the heading from the gyro.
+	*/
 	public double getHeading() {
 		return -Math.IEEEremainder(gyro.getAngle(), 360);
 	}
@@ -218,7 +222,7 @@ public class DriveFSMSystem {
 		if(input == null) return;
 		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
 		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
-
+		
 		limitPower(leftPower);
 		limitPower(rightPower);
 
@@ -229,10 +233,10 @@ public class DriveFSMSystem {
 	}
 
 	private void limitPower(double number){
-		if (number > 1) {
+		if(number > 1) {
 			number = 1;
 		}
-		if (number < -1) {
+		if(number < -1) {
 			number = -1;
 		}
 	}
