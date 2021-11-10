@@ -226,21 +226,21 @@ public class DriveFSMSystem {
 
 		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
 		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
-		
+
 		limitPower(leftPower);
 		limitPower(rightPower);
 
 		frontRightMotor.set(rightPower);
-        frontLeftMotor.set(leftPower);
-        backRightMotor.set(rightPower);
-        backLeftMotor.set(leftPower);
+		frontLeftMotor.set(leftPower);
+		backRightMotor.set(rightPower);
+		backLeftMotor.set(leftPower);
 	}
 
 	private void limitPower(double number){
-		if(number > 1) { 
+		if (number > 1) {
 			number = 1;
 		}
-		if(number < -1) { 
+		if (number < -1) {
 			number = -1;
 		}
 	}
