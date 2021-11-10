@@ -17,6 +17,8 @@ public class DriveFSMSystem {
 	public static final double ERR_THRESHOLD_STRAIGHT_IN = 0.1;
 	private static final double TELEOP_ANGLE_POWER_RATIO = 90.0;
 	private static final double TURN_ERROR_POWER_RATIO = 360;
+	private static final double MIN_TURN_POWER = 0.1;
+	private static final double TURN_ERROR_THRESHOLD_DEGREE = 1.0;
 
 	// FSM state definitions
 	public enum FSMState {
@@ -31,6 +33,8 @@ public class DriveFSMSystem {
 	/* ======================== Private variables ======================== */
 	private FSMState currentState;
 	private boolean finishedMovingStraight;
+	private boolean finishedTurning;
+	private double forwardStateInitialEncoderPos = -1;
 
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
@@ -66,6 +70,7 @@ public class DriveFSMSystem {
 		backLeftMotor.getEncoder().setPosition(0);
 
 		finishedMovingStraight = false;
+		finishedTurning = false;
 
 		// Reset state machine
 		reset();
@@ -110,7 +115,7 @@ public class DriveFSMSystem {
 				break;
 
 			case FORWARD_STATE_10_IN:
-				handleForwardOrBackwardState(input, 10);
+				handleForwardOrBackwardState(input, 10, forwardStateInitialEncoderPos != -1 ? forwardStateInitialEncoderPos : frontLeftMotor.getEncoder().getPosition());
 				break;
 
 			case TURN_STATE:
@@ -148,9 +153,18 @@ public class DriveFSMSystem {
 			case FORWARD_STATE_10_IN:
 				if (finishedMovingStraight) {
 					finishedMovingStraight = false;
+					forwardStateInitialEncoderPos = -1;
 					return FSMState.TURN_STATE;
 				} else {
 					return FSMState.FORWARD_STATE_10_IN;
+				}
+
+			case TURN_STATE:
+				if(finishedTurning) {
+					finishedTurning = false;
+					return FSMState.TELEOP_STATE;
+				}else {
+					return FSMState.TURN_STATE;
 				}
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
@@ -173,8 +187,9 @@ public class DriveFSMSystem {
 	*        the robot is in autonomous mode.
 	* @param inches The number of inches to move forward or backward
 	*/
-	private void handleForwardOrBackwardState(TeleopInput input, double inches) {
-		double positionRev = frontLeftMotor.getEncoder().getPosition();
+	private void handleForwardOrBackwardState(TeleopInput input, double inches, double initialEncoderPos) {
+		forwardStateInitialEncoderPos = initialEncoderPos;
+		double positionRev = frontLeftMotor.getEncoder().getPosition() - initialEncoderPos;
 		double currentPosInches = positionRev * Math.PI * WHEEL_DIAMETER_INCHES;
 		double error = inches - currentPosInches;
 		if (error < ERR_THRESHOLD_STRAIGHT_IN) {
@@ -205,7 +220,14 @@ public class DriveFSMSystem {
 	// turn x degrees, +x is right, -x is left
 	private void handleTurnState(TeleopInput input, double degrees) {
 		double error = degrees - getHeading();
+		if(error <= TURN_ERROR_THRESHOLD_DEGREE) {
+			finishedTurning = true;
+			return;
+		}
 		double power = error / TURN_ERROR_POWER_RATIO;
+		if(Math.abs(power) < MIN_TURN_POWER) {
+			power = MIN_TURN_POWER * power < 0 ? -1 : 1;
+		}
 
 		frontLeftMotor.set(power);
 		frontRightMotor.set(-power);
@@ -217,7 +239,7 @@ public class DriveFSMSystem {
 	* Gets the heading from the gyro.
 	* @return the gyro heading
 	*/
-	public double getHeading() {
+	private double getHeading() {
 		return -Math.IEEEremainder(gyro.getAngle(), 360);
 	}
 
