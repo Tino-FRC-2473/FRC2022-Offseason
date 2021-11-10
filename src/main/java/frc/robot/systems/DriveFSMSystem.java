@@ -192,7 +192,8 @@ public class DriveFSMSystem {
 	* @param initialEncoderPos The encoder position of the front left motor
 	* when the state/handler method was first initiated
 	*/
-	private void handleForwardOrBackwardState(TeleopInput input, double inches, double initialEncoderPos) {
+	private void handleForwardOrBackwardState(TeleopInput input,
+		double inches, double initialEncoderPos) {
 		forwardStateInitialEncoderPos = initialEncoderPos;
 		double positionRev = frontLeftMotor.getEncoder().getPosition() - initialEncoderPos;
 		double currentPosInches = positionRev * Math.PI * WHEEL_DIAMETER_INCHES;
