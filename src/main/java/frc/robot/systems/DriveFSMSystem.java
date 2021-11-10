@@ -14,6 +14,8 @@ public class DriveFSMSystem {
 	/* ======================== Constants ======================== */
 	public static final double WHEEL_DIAMETER_INCHES = 7.65;
 	public static final double KP_MOVE_STRAIGHT = 0.1;
+	public static final double ERR_THRESHOLD_STRAIGHT_IN = 0.1;
+
 	// FSM state definitions
 	public enum FSMState {
 		START_STATE,
@@ -26,6 +28,7 @@ public class DriveFSMSystem {
 
 	/* ======================== Private variables ======================== */
 	private FSMState currentState;
+	private boolean finishedMovingStraight;
 
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
@@ -59,6 +62,8 @@ public class DriveFSMSystem {
 		frontLeftMotor.getEncoder().setPosition(0);
 		backRightMotor.getEncoder().setPosition(0);
 		backLeftMotor.getEncoder().setPosition(0);
+
+		finishedMovingStraight = false;
 
 		// Reset state machine
 		reset();
@@ -139,12 +144,12 @@ public class DriveFSMSystem {
 				return FSMState.TELEOP_STATE;
             
 			case FORWARD_STATE_10_IN:
-				return FSMState.TURN_STATE;
-				//should be return FSMState.TURN_RIGHT; once simon pushes his code
-
-			case TURN_STATE:
-				return FSMState.START_STATE;
-
+				if (finishedMovingStraight) {
+					finishedMovingStraight = false;
+					return FSMState.TURN_STATE;
+				} else {
+					return FSMState.FORWARD_STATE_10_IN;
+				}
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
 		}
@@ -157,27 +162,27 @@ public class DriveFSMSystem {
 	 *        the robot is in autonomous mode.
 	 */
 	private void handleStartState(TeleopInput input) {
-		setPowerForAllMotors(0);
+		setPowerForAllMotors(0); //start with all motors set to 0
 	}
-
 	//Assume encoder starts at 0.
 	/**
-	* Handle behavior in FORWARD_STATE, or BACKWARD_STATE
+	* Handle behavior in FORWARD_STATE, or BACKWARD_STATE.
 	* @param input Global TeleopInput if robot in teleop mode or null if
 	*        the robot is in autonomous mode.
 	* @param inches The number of inches to move forward or backward
 	*/
-
-	//Assume encoder positions are at 0 initially
 	private void handleForwardOrBackwardState(TeleopInput input, double inches) {
-		double currentPos_inches = 
-			frontLeftMotor.getEncoder().getPosition() * Math.PI * WHEEL_DIAMETER_INCHES;
-		double error = inches - currentPos_inches;
+		double positionRev = frontLeftMotor.getEncoder().getPosition();
+		double currentPosInches = positionRev * Math.PI * WHEEL_DIAMETER_INCHES;
+		double error = inches - currentPosInches;
+		if (error < ERR_THRESHOLD_STRAIGHT_IN) {
+			finishedMovingStraight = true;
+		}
 		double speed = KP_MOVE_STRAIGHT * error;
 
-		if(speed >= 1) {
+		if (speed >= 1) {
 			setPowerForAllMotors(1);
-		} else if(speed <= -1) {
+		} else if (speed <= -1) {
 			setPowerForAllMotors(-1);
 		} else {
 			setPowerForAllMotors(speed);
@@ -200,12 +205,12 @@ public class DriveFSMSystem {
 		double power = error / 360;
 
 		frontLeftMotor.set(power);
-		frontRightMotor.set(power);
+		frontRightMotor.set(-power);
 		backLeftMotor.set(power);
-		backRightMotor.set(power);
+		backRightMotor.set(-power);
 	}
 
-	private double getHeading() {
+	public double getHeading() {
 		return -Math.IEEEremainder(gyro.getAngle(), 360);
 	}
 
