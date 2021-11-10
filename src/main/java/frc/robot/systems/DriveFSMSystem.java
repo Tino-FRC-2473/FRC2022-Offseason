@@ -116,7 +116,8 @@ public class DriveFSMSystem {
 
 			case FORWARD_STATE_10_IN:
 				handleForwardOrBackwardState(input, 10,
-					forwardStateInitialEncoderPos != -1 ? forwardStateInitialEncoderPos : frontLeftMotor.getEncoder().getPosition());
+					forwardStateInitialEncoderPos != -1 ? forwardStateInitialEncoderPos
+					: frontLeftMotor.getEncoder().getPosition());
 				break;
 
 			case TURN_STATE:
