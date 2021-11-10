@@ -37,6 +37,8 @@ public class FSMSystem {
 	private CANSparkMax frontLeftMotor;
 	private CANSparkMax backLeftMotor;
 
+	private double inchesToMoveTen;
+
 
 	/* ======================== Constructor ======================== */
 	/**
@@ -63,6 +65,7 @@ public class FSMSystem {
 		backLeftMotor.getEncoder().setPosition(0);
 
 		finishedMovingStraight = false;
+		inchesToMove = 10;
 
 		// Reset state machine
 		reset();
@@ -103,7 +106,7 @@ public class FSMSystem {
 				break;
 
 			case FORWARD_STATE_10_IN:
-				double inchesToMove = 10;
+				double inchesToMove = inchesToMoveTen;
 				handleForwardOrBackwardState(input, inchesToMove, inchesToMove);
 				break;
 
