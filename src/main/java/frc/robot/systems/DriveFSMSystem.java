@@ -106,7 +106,7 @@ public class DriveFSMSystem {
 			case TELEOP_STATE:
 				handleTeleOpState(input);
 				break;
-				
+
 			case FORWARD_STATE_10_IN:
 				handleForwardOrBackwardState(input, 10);
 				break;
@@ -213,13 +213,17 @@ public class DriveFSMSystem {
 
 	/**
 	* Gets the heading from the gyro.
+	* @return the gyro heading
 	*/
 	public double getHeading() {
 		return -Math.IEEEremainder(gyro.getAngle(), 360);
 	}
 
 	private void handleTeleOpState(TeleopInput input) {
-		if(input == null) return;
+		if(input == null) {
+			return;
+		}
+
 		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
 		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
 		
