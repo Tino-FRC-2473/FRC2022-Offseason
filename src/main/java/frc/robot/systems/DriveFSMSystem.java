@@ -226,8 +226,10 @@ public class DriveFSMSystem {
 			return;
 		}
 
-		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / TELEOP_ANGLE_POWER_RATIO);
-		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / TELEOP_ANGLE_POWER_RATIO);
+		double leftPower = -input.getDrivingJoystickY() *
+			(1 + input.getSteerAngleDegrees() / TELEOP_ANGLE_POWER_RATIO);
+		double rightPower = input.getDrivingJoystickY() *
+			(1 - input.getSteerAngleDegrees() / TELEOP_ANGLE_POWER_RATIO);
 
 		limitPower(leftPower);
 		limitPower(rightPower);
