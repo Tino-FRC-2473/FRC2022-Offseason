@@ -194,7 +194,7 @@ public class DriveFSMSystem {
 	*/
 	private void handleForwardOrBackwardState(TeleopInput input,
 		double inches, double initialEncoderPos) {
-			
+		
 		forwardStateInitialEncoderPos = initialEncoderPos;
 		double positionRev = frontLeftMotor.getEncoder().getPosition() - initialEncoderPos;
 		double currentPosInches = positionRev * Math.PI * WHEEL_DIAMETER_INCHES;
