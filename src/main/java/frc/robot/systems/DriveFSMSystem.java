@@ -15,6 +15,8 @@ public class DriveFSMSystem {
 	public static final double WHEEL_DIAMETER_INCHES = 7.65;
 	public static final double KP_MOVE_STRAIGHT = 0.1;
 	public static final double ERR_THRESHOLD_STRAIGHT_IN = 0.1;
+	private static final double TELEOP_ANGLE_POWER_RATIO = 90.0;
+	private static final double TURN_ERROR_POWER_RATIO = 360;
 
 	// FSM state definitions
 	public enum FSMState {
@@ -203,7 +205,7 @@ public class DriveFSMSystem {
 	// turn x degrees, +x is right, -x is left
 	private void handleTurnState(TeleopInput input, double degrees) {
 		double error = degrees - getHeading();
-		double power = error / 360;
+		double power = error / TURN_ERROR_POWER_RATIO;
 
 		frontLeftMotor.set(power);
 		frontRightMotor.set(-power);
@@ -220,12 +222,12 @@ public class DriveFSMSystem {
 	}
 
 	private void handleTeleOpState(TeleopInput input) {
-		if(input == null) {
+		if (input == null) {
 			return;
 		}
 
-		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
-		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
+		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / TELEOP_ANGLE_POWER_RATIO);
+		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / TELEOP_ANGLE_POWER_RATIO);
 
 		limitPower(leftPower);
 		limitPower(rightPower);
@@ -236,7 +238,7 @@ public class DriveFSMSystem {
 		backLeftMotor.set(leftPower);
 	}
 
-	private void limitPower(double number){
+	private void limitPower(double number) {
 		if (number > 1) {
 			number = 1;
 		}
