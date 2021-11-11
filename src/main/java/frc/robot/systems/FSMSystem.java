@@ -118,6 +118,8 @@ public class FSMSystem {
             default:
                 throw new IllegalStateException("Invalid state: " + currentState.toString());
         }
+
+        currentState = nextState(input);
     }
     
     /* ======================== Private methods ======================== */
@@ -131,6 +133,11 @@ public class FSMSystem {
         * @return FSM state for the next iteration
         */
     private FSMState nextState(TeleopInput input) {
+        System.out.println(currentState);
+
+        if(input != null && !input.isRampToggleButtonPressed())
+            canToggleRamp = true;
+
         switch (currentState) {
             case RETRACTED:
                 if (input != null) {
@@ -141,9 +148,7 @@ public class FSMSystem {
                     else if(input.isRampToggleButtonPressed() && canToggleRamp){
                         canToggleRamp = false;
                         return FSMState.EXTENDED;
-                    } else if(!input.isRampToggleButtonPressed())
-                        canToggleRamp = true;
-                    else
+                    } else
                         return FSMState.RETRACTED;
                 } else {
                     return FSMState.RETRACTED;
@@ -158,12 +163,12 @@ public class FSMSystem {
                     else if(input.isRampToggleButtonPressed() && canToggleRamp){
                         canToggleRamp = false;
                         return FSMState.RETRACTED;
-                    } else if(!input.isRampToggleButtonPressed())
-                        canToggleRamp = true;
+                    } 
                     else
                         return FSMState.EXTENDED;
-                } else
+                } else {
                     return FSMState.EXTENDED;
+                }
     
             case SHOOT_EXTENDED:
                 if(input != null){
@@ -258,7 +263,9 @@ public class FSMSystem {
         */
     private void handleShootExtendedState(TeleopInput input) {
         armActuator.set(true);
-        shooterMotor.set(MOTOR_SHOOTING_POWER);
+        System.out.println(shooterMotor.get());
+        shooterMotor.set(0.2);
+        System.out.println(shooterMotor.get());
         intakeMotor.set(0);
         transportMotor.set(0);
     }
