@@ -84,13 +84,13 @@ public class TeleopInput {
 		return rightJoystick.getY(GenericHID.Hand.kRight);
 	}
 
+	/**
+	 * Get did toggle button change from unpressed to pressed.
+	 * @return Axis value
+	 */
 	public boolean isRampToggleButtonPressed(){
-		return rightJoystick.getRawButton(1);
+		return rightJoystick.getRawButtonPressed(1);
 	}
-
-	// public boolean isRetractButtonPressed(){
-	// 	return rightJoystick.getRawButton(2);
-	// }
 
 	/* ======================== Private methods ======================== */
 
