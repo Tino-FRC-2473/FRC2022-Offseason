@@ -1,18 +1,19 @@
 package frc.robot.systems;
 
-import javax.lang.model.util.ElementScanner6;
-
 // WPILib Imports
 
 // Third party Hardware Imports
-import com.revrobotics.CANSparkMax;
+import net.thefletcher.revrobotics.CANSparkMax;
+import net.thefletcher.revrobotics.enums.MotorType;
+// Above imports are for simulation purposes, replace with bottom when building to run
+// import com.revrobotics.CANSparkMax;
 
 import edu.wpi.first.wpilibj.Solenoid;
 // Robot Imports
 import frc.robot.TeleopInput;
 import frc.robot.HardwareMap;
 
-public class FSMSystem {
+public class ShootIntakeFSM {
     /* ======================== Constants ======================== */
     // FSM state definitions
     public enum FSMState {
@@ -30,8 +31,6 @@ public class FSMSystem {
     
     /* ======================== Private variables ======================== */
     private FSMState currentState;
-
-    private boolean canToggleRamp;
     
     // Hardware devices should be owned by one and only one system. They must
     // be private to their owner system and may not be used elsewhere.
@@ -45,14 +44,24 @@ public class FSMSystem {
         * one-time initialization or configuration of hardware required. Note
         * the constructor is called only once when the robot boots.
         */
-    public FSMSystem() {
+    public ShootIntakeFSM() {
         // Perform hardware init
+
+        ////////INIT CODE FOR NORMAL RUN SYSTEM, WITHOUT SPARK MAX SIM
+        // shooterMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_SHOOTER,
+        //                                 CANSparkMax.MotorType.kBrushless);
+        // intakeMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_INTAKE,
+        //                                 CANSparkMax.MotorType.kBrushless);
+        // transportMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_TRANSPORT_PULLEY,
+        //                                 CANSparkMax.MotorType.kBrushless);
+
+
         shooterMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_SHOOTER,
-                                        CANSparkMax.MotorType.kBrushless);
+                                        MotorType.kBrushless);
         intakeMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_INTAKE,
-                                        CANSparkMax.MotorType.kBrushless);
+                                        MotorType.kBrushless);
         transportMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_TRANSPORT_PULLEY,
-                                        CANSparkMax.MotorType.kBrushless);
+                                        MotorType.kBrushless);
         armActuator = new Solenoid(HardwareMap.PCM_CHANNEL_INTAKE_CYLINDER_FORWARD);
     
         // Reset state machine
@@ -77,8 +86,6 @@ public class FSMSystem {
         */
     public void reset() {
         currentState = FSMState.RETRACTED;
-
-        canToggleRamp = true;
     
         // Call one tick of update to ensure outputs reflect start state
         update(null);
@@ -133,11 +140,6 @@ public class FSMSystem {
         * @return FSM state for the next iteration
         */
     private FSMState nextState(TeleopInput input) {
-        System.out.println(currentState);
-
-        if(input != null && !input.isRampToggleButtonPressed())
-            canToggleRamp = true;
-
         switch (currentState) {
             case RETRACTED:
                 if (input != null) {
@@ -145,10 +147,9 @@ public class FSMSystem {
                         return FSMState.SHOOT_RETRACTED;
                     else if(input.isIntakeButtonPressed())
                         return FSMState.INTAKING_RETRACTED;
-                    else if(input.isRampToggleButtonPressed() && canToggleRamp){
-                        canToggleRamp = false;
+                    else if(input.isRampToggleButtonPressed())
                         return FSMState.EXTENDED;
-                    } else
+                    else
                         return FSMState.RETRACTED;
                 } else {
                     return FSMState.RETRACTED;
@@ -160,10 +161,8 @@ public class FSMSystem {
                         return FSMState.SHOOT_EXTENDED;
                     else if(input.isIntakeButtonPressed())
                         return FSMState.INTAKING_EXTENDED;
-                    else if(input.isRampToggleButtonPressed() && canToggleRamp){
-                        canToggleRamp = false;
+                    else if(input.isRampToggleButtonPressed())
                         return FSMState.RETRACTED;
-                    } 
                     else
                         return FSMState.EXTENDED;
                 } else {
@@ -213,7 +212,7 @@ public class FSMSystem {
     
     /* ------------------------ FSM state handlers ------------------------ */
     /**
-        * Handle behavior in START_STATE.
+        * Handle behavior in EXTENDED.
         * @param input Global TeleopInput if robot in teleop mode or null if
         *        the robot is in autonomous mode.
         */
@@ -224,7 +223,7 @@ public class FSMSystem {
         transportMotor.set(0);
     }
     /**
-    * Handle behavior in OTHER_STATE.
+    * Handle behavior in RETRACTED.
     * @param input Global TeleopInput if robot in teleop mode or null if
     *        the robot is in autonomous mode.
     */
@@ -235,7 +234,7 @@ public class FSMSystem {
         transportMotor.set(0);
     }
     /**
-        * Handle behavior in OTHER_STATE.
+        * Handle behavior in INTAKING_EXTENDED.
         * @param input Global TeleopInput if robot in teleop mode or null if
         *        the robot is in autonomous mode.
         */
@@ -246,7 +245,7 @@ public class FSMSystem {
         transportMotor.set(MOTOR_TRANSPORT_POWER);
     }
     /**
-        * Handle behavior in OTHER_STATE.
+        * Handle behavior in INTAKING_RETRACTED.
         * @param input Global TeleopInput if robot in teleop mode or null if
         *        the robot is in autonomous mode.
         */
@@ -257,20 +256,18 @@ public class FSMSystem {
         transportMotor.set(MOTOR_TRANSPORT_POWER);
     }
     /**
-        * Handle behavior in OTHER_STATE.
+        * Handle behavior in SHOOT_EXTENDED.
         * @param input Global TeleopInput if robot in teleop mode or null if
         *        the robot is in autonomous mode.
         */
     private void handleShootExtendedState(TeleopInput input) {
         armActuator.set(true);
-        System.out.println(shooterMotor.get());
-        shooterMotor.set(0.2);
-        System.out.println(shooterMotor.get());
+        shooterMotor.set(MOTOR_SHOOTING_POWER);
         intakeMotor.set(0);
         transportMotor.set(0);
     }
     /**
-        * Handle behavior in OTHER_STATE.
+        * Handle behavior in SHOOT_RETRACTED.
         * @param input Global TeleopInput if robot in teleop mode or null if
         *        the robot is in autonomous mode.
         */
