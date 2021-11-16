@@ -19,6 +19,9 @@ public class DriveFSMSystem {
 	private static final double TURN_ERROR_POWER_RATIO = 360;
 	private static final double MIN_TURN_POWER = 0.1;
 	private static final double TURN_ERROR_THRESHOLD_DEGREE = 1.0;
+	private static final double COUNTS_PER_MOTOR_REVOLUTION = 42;
+    private static final double GEAR_RATIO = 26.0 * 4.67 / 12.0;
+    private static final double DRIVE_TICKS_PER_INCH = COUNTS_PER_MOTOR_REVOLUTION * GEAR_RATIO / (Math.PI * WHEEL_DIAMETER_INCHES);
 
 	// FSM state definitions
 	public enum FSMState {
@@ -35,6 +38,14 @@ public class DriveFSMSystem {
 	private boolean finishedMovingStraight;
 	private boolean finishedTurning;
 	private double forwardStateInitialEncoderPos = -1;
+	private double rawGyroAngle = 0;
+	private double robotXPosLine = 0;
+	private double robotYPosLine = 0;
+	private double prevEncoderPosLine = 0;
+	private double prevEncoderPosArc = 0;
+	private double robotXPosArc = 0;
+	private double robotYPosArc = 0;
+	private double prevGyroAngle = 0;
 
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
@@ -105,6 +116,10 @@ public class DriveFSMSystem {
 	 *        the robot is in autonomous mode.
 	 */
 	public void update(TeleopInput input) {
+		rawGyroAngle = gyro.getAngle();
+		updateLineOdometry();
+		updateArcOdometry();
+		
 		switch (currentState) {
 			case START_STATE:
 				handleStartState(input);
@@ -275,5 +290,37 @@ public class DriveFSMSystem {
 		if (number < -1) {
 			number = -1;
 		}
+	}
+
+	private void updateLineOdometry() {
+		double adjustedAngle = 90 - rawGyroAngle;
+		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition() + 
+		frontRightMotor.getEncoder().getPosition()) / 2.0);
+		double dEncoder = (currentEncoderPos - prevEncoderPosLine) / DRIVE_TICKS_PER_INCH;
+		double dX = dEncoder * Math.sin(Math.toRadians(adjustedAngle));
+		double dY = dEncoder * Math.cos(Math.toRadians(adjustedAngle));
+		robotXPosLine += dX;
+		robotYPosLine += dY;
+
+		prevEncoderPosLine = currentEncoderPos;
+	}
+
+	private void updateArcOdometry() {
+		double adjustedAngle = 90 - rawGyroAngle;
+		double theta = Math.abs(adjustedAngle - prevGyroAngle);
+		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition() + 
+		frontRightMotor.getEncoder().getPosition()) / 2.0);
+
+		double arcLength = (currentEncoderPos - prevEncoderPosArc) / DRIVE_TICKS_PER_INCH;
+		double radius = 180 * arcLength / (Math.PI * theta);
+		double alpha = prevGyroAngle - 90;
+		double circleX = robotXPosArc + radius * Math.cos(Math.toRadians(alpha));
+		double circleY = robotYPosArc + radius * Math.sin(Math.toRadians(alpha));
+		double beta = alpha + 180 - theta;
+		robotXPosArc = circleX + radius * Math.cos(Math.toRadians(beta));
+		robotYPosArc = circleY + radius * Math.sin(Math.toRadians(beta));
+
+		prevGyroAngle = adjustedAngle;
+		prevEncoderPosArc = currentEncoderPos;
 	}
 }
