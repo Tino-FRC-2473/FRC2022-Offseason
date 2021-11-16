@@ -13,5 +13,7 @@ Some additional naming guidance:
  * Variable names: camelCase
  * Booleans should start with "is" or "has" (ex. hasMotor, isPositive)
 
+The full style guidelines are enforced by [CheckStyle](https://checkstyle.sourceforge.io/). You may wish to install the [VSCode Checkstyle for Java plugin](https://marketplace.visualstudio.com/items?itemName=shengchen.vscode-checkstyle) to automatically detect style errors.
+
 ## Commit messages
 Everyone should read and follow the rules in "[How to write a Git Commit Message](https://chris.beams.io/posts/git-commit/)."
