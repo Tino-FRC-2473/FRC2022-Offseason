@@ -24,20 +24,22 @@ public class ShootIntakeFSM {
 		SHOOT_RETRACTED,
 		SHOOT_EXTENDED
 	}
-	
+
 	private static final float MOTOR_SHOOTING_POWER = 0.2f;
 	private static final float MOTOR_INTAKE_POWER = 0.1f;
 	private static final float MOTOR_TRANSPORT_POWER = 0.07f;
-	
+
 	/* ======================== Private variables ======================== */
 	private FSMState currentState;
-	
+
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
-	private CANSparkMax shooterMotor, intakeMotor, transportMotor;
-	
+	private CANSparkMax shooterMotor;
+	private CANSparkMax intakeMotor;
+	private CANSparkMax transportMotor;
+
 	private Solenoid armActuator;
-	
+
 	/* ======================== Constructor ======================== */
 	/**
 		* Create FSMSystem and initialize to starting state. Also perform any
@@ -63,11 +65,11 @@ public class ShootIntakeFSM {
 		transportMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_TRANSPORT_PULLEY,
 										MotorType.kBrushless);
 		armActuator = new Solenoid(HardwareMap.PCM_CHANNEL_INTAKE_CYLINDER_FORWARD);
-	
+
 		// Reset state machine
 		reset();
 	}
-	
+
 	/* ======================== Public methods ======================== */
 	/**
 		* Return current FSM state.
@@ -86,7 +88,7 @@ public class ShootIntakeFSM {
 		*/
 	public void reset() {
 		currentState = FSMState.RETRACTED;
-	
+
 		// Call one tick of update to ensure outputs reflect start state
 		update(null);
 	}
@@ -101,34 +103,34 @@ public class ShootIntakeFSM {
 			case EXTENDED:
 				handleExtendedState(input);
 				break;
-				
+
 			case INTAKING_EXTENDED:
 				handleIntakingExtendedState(input);
 				break;
-				
+
 			case INTAKING_RETRACTED:
 				handleIntakingRetractedState(input);
 				break;
-	
+
 			case SHOOT_EXTENDED:
 				handleShootExtendedState(input);
 				break;
-	
+
 			case SHOOT_RETRACTED:
 				handleShootRetractedState(input);
 				break;
-	
+
 			case RETRACTED:
 				handleRetractedState(input);
 				break;
-	
+
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
 		}
 
 		currentState = nextState(input);
 	}
-	
+
 	/* ======================== Private methods ======================== */
 	/**
 		* Decide the next state to transition to. This is a function of the inputs
@@ -143,73 +145,83 @@ public class ShootIntakeFSM {
 		switch (currentState) {
 			case RETRACTED:
 				if (input != null) {
-					if(input.isShooterButtonPressed())
+					if (input.isShooterButtonPressed()) {
 						return FSMState.SHOOT_RETRACTED;
-					else if(input.isIntakeButtonPressed())
+					} else if (input.isIntakeButtonPressed()) {
 						return FSMState.INTAKING_RETRACTED;
-					else if(input.isRampToggleButtonPressed())
+					} else if (input.isRampToggleButtonPressed()) {
 						return FSMState.EXTENDED;
-					else
+					} else {
 						return FSMState.RETRACTED;
+					}
 				} else {
 					return FSMState.RETRACTED;
 				}
-	
+
 			case EXTENDED:
-				if(input != null){
-					if(input.isShooterButtonPressed())
+				if (input != null) {
+					if (input.isShooterButtonPressed()) {
 						return FSMState.SHOOT_EXTENDED;
-					else if(input.isIntakeButtonPressed())
+					} else if (input.isIntakeButtonPressed()) {
 						return FSMState.INTAKING_EXTENDED;
-					else if(input.isRampToggleButtonPressed())
+					} else if (input.isRampToggleButtonPressed()) {
 						return FSMState.RETRACTED;
-					else
+					} else {
 						return FSMState.EXTENDED;
+					}
 				} else {
 					return FSMState.EXTENDED;
 				}
-	
+
 			case SHOOT_EXTENDED:
-				if(input != null){
-					if(input.isShooterButtonPressed())
+				if (input != null) {
+					if (input.isShooterButtonPressed()) {
 						return FSMState.SHOOT_EXTENDED;
-					else
+					} else {
 						return FSMState.EXTENDED;
-				}else
+					}
+				} else {
 					return FSMState.EXTENDED;
-	
+				}
+
 			case SHOOT_RETRACTED:
-				if(input != null){
-					if(input.isShooterButtonPressed())
+				if (input != null) {
+					if (input.isShooterButtonPressed()) {
 						return FSMState.SHOOT_RETRACTED;
-					else
+					} else {
 						return FSMState.RETRACTED;
-				}else
+					}
+				} else {
 					return FSMState.RETRACTED;
+				}
 
 			case INTAKING_EXTENDED:
-				if(input != null){
-					if(input.isIntakeButtonPressed())
+				if (input != null) {
+					if (input.isIntakeButtonPressed()) {
 						return FSMState.INTAKING_EXTENDED;
-					else
+					} else {
 						return FSMState.EXTENDED;
-				}else
+					}
+				} else {
 					return FSMState.EXTENDED;
-			
+				}
+
 			case INTAKING_RETRACTED:
-				if(input != null){
-					if(input.isIntakeButtonPressed())
+				if (input != null) {
+					if (input.isIntakeButtonPressed()) {
 						return FSMState.INTAKING_RETRACTED;
-					else
+					} else {
 						return FSMState.RETRACTED;
-				}else
+					}
+				} else {
 					return FSMState.RETRACTED;
-	
+				}
+
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
 		}
 	}
-	
+
 	/* ------------------------ FSM state handlers ------------------------ */
 	/**
 		* Handle behavior in EXTENDED.

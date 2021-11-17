@@ -88,7 +88,7 @@ public class TeleopInput {
 	 * Get did toggle button change from unpressed to pressed.
 	 * @return Axis value
 	 */
-	public boolean isRampToggleButtonPressed(){
+	public boolean isRampToggleButtonPressed() {
 		return rightJoystick.getRawButtonPressed(1);
 	}
 
