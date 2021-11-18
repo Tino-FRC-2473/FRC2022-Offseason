@@ -1,7 +1,7 @@
 package frc.robot.systems;
 
 // WPILib Imports
-import edu.wpi.first.wpilibj.AnalogOutput;
+
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
@@ -290,7 +290,7 @@ public class DriveFSMSystem {
 		backLeftMotor.set(leftPower);
 	}
 
-	private double limitPower(double number){
+	private double limitPower(double number) {
 		if (number > 1) {
 			return 1;
 		}
@@ -318,7 +318,6 @@ public class DriveFSMSystem {
 		double theta = Math.abs(adjustedAngle - prevGyroAngle);
 		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition()
 			+ frontRightMotor.getEncoder().getPosition()) / 2.0);
-
 		double arcLength = (currentEncoderPos - prevEncoderPosArc) / DRIVE_TICKS_PER_INCH;
 		double radius = 180 * arcLength / (Math.PI * theta);
 		double alpha = prevGyroAngle - 90;
