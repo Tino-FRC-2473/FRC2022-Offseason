@@ -5,7 +5,7 @@ package frc.robot;
 
 // WPILib Imports
 import edu.wpi.first.wpilibj.TimedRobot;
-
+import edu.wpi.first.wpilibj.XboxController.Axis;
 // Systems
 import frc.robot.systems.ShootIntakeFSM;
 import frc.robot.systems.DriveFSMSystem;
@@ -84,7 +84,9 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void simulationPeriodic() { }
+	public void simulationPeriodic() {
+		//DriveFSMSystem.sim1.setVoltage(1);
+	}
 
 	// Do not use robotPeriodic. Use mode specific periodic methods instead.
 	@Override
