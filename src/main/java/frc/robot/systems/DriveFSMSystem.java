@@ -20,8 +20,9 @@ public class DriveFSMSystem {
 	private static final double MIN_TURN_POWER = 0.1;
 	private static final double TURN_ERROR_THRESHOLD_DEGREE = 1.0;
 	private static final double COUNTS_PER_MOTOR_REVOLUTION = 42;
-    private static final double GEAR_RATIO = 26.0 * 4.67 / 12.0;
-    private static final double DRIVE_TICKS_PER_INCH = COUNTS_PER_MOTOR_REVOLUTION * GEAR_RATIO / (Math.PI * WHEEL_DIAMETER_INCHES);
+	private static final double GEAR_RATIO = 26.0 * 4.67 / 12.0;
+	private static final double DRIVE_TICKS_PER_INCH
+		= COUNTS_PER_MOTOR_REVOLUTION * GEAR_RATIO / (Math.PI * WHEEL_DIAMETER_INCHES);
 
 	// FSM state definitions
 	public enum FSMState {
@@ -119,7 +120,6 @@ public class DriveFSMSystem {
 		rawGyroAngle = gyro.getAngle();
 		updateLineOdometry();
 		updateArcOdometry();
-		
 		switch (currentState) {
 			case START_STATE:
 				handleStartState(input);
@@ -232,9 +232,9 @@ public class DriveFSMSystem {
 	* @param power The power to set all the motors to
 	*/
 	private void setPowerForAllMotors(double power) {
-		frontLeftMotor.set(power);
+		frontLeftMotor.set(-power);
 		frontRightMotor.set(power);
-		backLeftMotor.set(power);
+		backLeftMotor.set(-power);
 		backRightMotor.set(power);
 	}
 
@@ -294,8 +294,8 @@ public class DriveFSMSystem {
 
 	private void updateLineOdometry() {
 		double adjustedAngle = 90 - rawGyroAngle;
-		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition() + 
-		frontRightMotor.getEncoder().getPosition()) / 2.0);
+		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition()
+			+ frontRightMotor.getEncoder().getPosition()) / 2.0);
 		double dEncoder = (currentEncoderPos - prevEncoderPosLine) / DRIVE_TICKS_PER_INCH;
 		double dX = dEncoder * Math.sin(Math.toRadians(adjustedAngle));
 		double dY = dEncoder * Math.cos(Math.toRadians(adjustedAngle));
@@ -308,8 +308,8 @@ public class DriveFSMSystem {
 	private void updateArcOdometry() {
 		double adjustedAngle = 90 - rawGyroAngle;
 		double theta = Math.abs(adjustedAngle - prevGyroAngle);
-		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition() + 
-		frontRightMotor.getEncoder().getPosition()) / 2.0);
+		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition()
+			+ frontRightMotor.getEncoder().getPosition()) / 2.0);
 
 		double arcLength = (currentEncoderPos - prevEncoderPosArc) / DRIVE_TICKS_PER_INCH;
 		double radius = 180 * arcLength / (Math.PI * theta);
