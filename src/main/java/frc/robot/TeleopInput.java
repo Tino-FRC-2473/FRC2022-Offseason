@@ -95,10 +95,10 @@ public class TeleopInput {
 	/* ------------------------ Wheel ------------------------ */
 	/**
 	 * Get Angle of the steering Wheel.
-	 * @return Angle in degrees
+	 * @return Angle
 	 */
-	public double getSteerAngleDegrees() {
-		return wheel.getDirectionDegrees();
+	public double getSteerAngle() {
+		return wheel.getX();
 	}
 
 	/* ------------------------ Driving Joystick ------------------------ */
@@ -106,8 +106,8 @@ public class TeleopInput {
 	 * Get Y value of Driving Joystick.
 	 * @return Y-Axis value
 	 */
-	public double getDrivingJoystickY() {
-		return drivingJoystick.getY();
+	public double getDrivingJoystickZ() {
+		return drivingJoystick.getZ();
 	}
 
 	/* ======================== Private methods ======================== */
