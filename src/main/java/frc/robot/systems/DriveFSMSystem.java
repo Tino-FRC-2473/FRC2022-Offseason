@@ -1,6 +1,7 @@
 package frc.robot.systems;
 
 // WPILib Imports
+import edu.wpi.first.wpilibj.AnalogOutput;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
@@ -211,11 +212,20 @@ public class DriveFSMSystem {
 
 	private void handleTeleOpState(TeleopInput input) {
 		if(input == null) return;
-		double leftPower = -input.getDrivingJoystickY() * (1 + input.getSteerAngleDegrees() / 90);
-		double rightPower = input.getDrivingJoystickY() * (1 - input.getSteerAngleDegrees() / 90);
 
-		limitPower(leftPower);
-		limitPower(rightPower);
+		double joystickZ = input.getDrivingJoystickZ();
+		double steerAngle = -input.getSteerAngle();
+
+		double leftPower = -joystickZ * (1 + steerAngle);
+		double rightPower = joystickZ * (1 - steerAngle);
+
+		leftPower = limitPower(leftPower);
+		rightPower = limitPower(rightPower);
+
+		System.out.println("Driving Stick: " + joystickZ);
+		System.out.println("Steering Wheel: " + steerAngle);
+		System.out.println("Left power: " + leftPower);
+		System.out.println("Right Power: " + rightPower);
 
 		frontRightMotor.set(rightPower);
         frontLeftMotor.set(leftPower);
@@ -223,12 +233,13 @@ public class DriveFSMSystem {
         backLeftMotor.set(leftPower);
 	}
 
-	private void limitPower(double number){
+	private double limitPower(double number){
 		if (number > 1) {
-			number = 1;
+			return 1;
 		}
 		if (number < -1) {
-			number = -1;
+			return -1;
 		}
+		return number;
 	}
 }
