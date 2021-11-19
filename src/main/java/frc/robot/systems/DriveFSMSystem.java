@@ -24,6 +24,7 @@ public class DriveFSMSystem {
 	private static final double GEAR_RATIO = 26.0 * 4.67 / 12.0;
 	private static final double DRIVE_TICKS_PER_INCH
 		= COUNTS_PER_MOTOR_REVOLUTION * GEAR_RATIO / (Math.PI * WHEEL_DIAMETER_INCHES);
+	private static final double ODOMETRY_MIN_THETA = 1.0;
 
 	// FSM state definitions
 	public enum FSMState {
@@ -319,6 +320,9 @@ public class DriveFSMSystem {
 		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition()
 			+ frontRightMotor.getEncoder().getPosition()) / 2.0);
 		double arcLength = (currentEncoderPos - prevEncoderPosArc) / DRIVE_TICKS_PER_INCH;
+		if (Math.abs(theta) < ODOMETRY_MIN_THETA) {
+			theta = 1;
+		}
 		double radius = 180 * arcLength / (Math.PI * theta);
 		double alpha = prevGyroAngle - 90;
 		double circleX = robotXPosArc + radius * Math.cos(Math.toRadians(alpha));
