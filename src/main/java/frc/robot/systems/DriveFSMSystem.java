@@ -1,7 +1,7 @@
 package frc.robot.systems;
 
 // WPILib Imports
-
+import edu.wpi.first.wpilibj.SPI;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
@@ -78,13 +78,7 @@ public class DriveFSMSystem {
 		backLeftMotor = new CANSparkMax(HardwareMap.CAN_ID_SPARK_DRIVE_BACK_LEFT,
 											CANSparkMax.MotorType.kBrushless);
 
-		frontRightMotor.getEncoder().setPosition(0);
-		frontLeftMotor.getEncoder().setPosition(0);
-		backRightMotor.getEncoder().setPosition(0);
-		backLeftMotor.getEncoder().setPosition(0);
-
-		finishedMovingStraight = false;
-		finishedTurning = false;
+		gyro = new AHRS(SPI.Port.kMXP);
 
 		// Reset state machine
 		reset();
@@ -107,6 +101,18 @@ public class DriveFSMSystem {
 	 * Ex. if the robot is enabled, disabled, then reenabled.
 	 */
 	public void reset() {
+
+		frontRightMotor.getEncoder().setPosition(0);
+		frontLeftMotor.getEncoder().setPosition(0);
+		backRightMotor.getEncoder().setPosition(0);
+		backLeftMotor.getEncoder().setPosition(0);
+
+		gyro.reset();
+		gyro.zeroYaw();
+
+		finishedMovingStraight = false;
+		finishedTurning = false;
+
 		currentState = FSMState.TELEOP_STATE;
 
 		// Call one tick of update to ensure outputs reflect start state
@@ -132,9 +138,7 @@ public class DriveFSMSystem {
 				break;
 
 			case FORWARD_STATE_10_IN:
-				handleForwardOrBackwardState(input, 10,
-					forwardStateInitialEncoderPos != -1 ? forwardStateInitialEncoderPos
-					: frontLeftMotor.getEncoder().getPosition());
+				handleForwardOrBackwardState(input, 10, forwardStateInitialEncoderPos);
 				break;
 
 			case TURN_STATE:
@@ -200,7 +204,6 @@ public class DriveFSMSystem {
 	private void handleStartState(TeleopInput input) {
 		setPowerForAllMotors(0); //start with all motors set to 0
 	}
-	//Assume encoder starts at 0.
 	/**
 	* Handle behavior in FORWARD_STATE, or BACKWARD_STATE.
 	* @param input Global TeleopInput if robot in teleop mode or null if
@@ -211,7 +214,10 @@ public class DriveFSMSystem {
 	*/
 	private void handleForwardOrBackwardState(TeleopInput input,
 		double inches, double initialEncoderPos) {
-		forwardStateInitialEncoderPos = initialEncoderPos;
+		double currrentPosTicks = frontLeftMotor.getEncoder().getPosition();
+		if (forwardStateInitialEncoderPos == -1) {
+			forwardStateInitialEncoderPos = currrentPosTicks;
+		}
 		double positionRev = frontLeftMotor.getEncoder().getPosition() - initialEncoderPos;
 		double currentPosInches = positionRev * Math.PI * WHEEL_DIAMETER_INCHES;
 		double error = inches - currentPosInches;
@@ -240,7 +246,12 @@ public class DriveFSMSystem {
 		backRightMotor.set(power);
 	}
 
-	// turn x degrees, +x is right, -x is left
+	/**
+	* Handle behavior in TURN_STATE.
+	* @param input Global TeleopInput if robot in teleop mode or null if
+	*        the robot is in autonomous mode.
+	* @param degrees The final angle of the robot after the desired turn
+	*/
 	private void handleTurnState(TeleopInput input, double degrees) {
 		double error = degrees - getHeading();
 		if (error <= TURN_ERROR_THRESHOLD_DEGREE) {
