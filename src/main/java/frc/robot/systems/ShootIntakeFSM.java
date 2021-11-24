@@ -83,7 +83,7 @@ public class ShootIntakeFSM {
 		* Return current ramp state.
 		* @return Current ramp state
 		*/
-	public boolean getRampState(){
+	public boolean getRampState() {
 		return rampState;
 	}
 
@@ -249,7 +249,7 @@ public class ShootIntakeFSM {
 		* @param input Global TeleopInput if robot in teleop mode or null if
 		*        the robot is in autonomous mode.
 		*/
-	private void handleRemainingSystem(TeleopInput input){
+	private void handleRemainingSystem(TeleopInput input) {
 		if (rampState) {
 			armActuator.set(true);
 		} else {
