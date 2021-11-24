@@ -19,7 +19,8 @@ public class ShootIntakeFSM {
 	public enum FSMState {
 		IDLE,
 		INTAKING,
-		SHOOTING
+		SHOOTING,
+		INTAKING_AND_SHOOTING
 	}
 
 	private static final float MOTOR_SHOOTING_POWER = 0.2f;
@@ -77,6 +78,15 @@ public class ShootIntakeFSM {
 	public FSMState getCurrentState() {
 		return currentState;
 	}
+
+	/**
+		* Return current ramp state.
+		* @return Current ramp state
+		*/
+	public boolean getRampState(){
+		return rampState;
+	}
+
 	/**
 		* Reset this system to its start state. This may be called from mode init
 		* when the robot is enabled.
@@ -112,6 +122,9 @@ public class ShootIntakeFSM {
 				handleShootingState(input);
 				break;
 
+			case INTAKING_AND_SHOOTING:
+				handleIntakingAndShootingState(input);
+
 			default:
 				throw new IllegalStateException("Invalid state: " + currentState.toString());
 		}
@@ -135,29 +148,50 @@ public class ShootIntakeFSM {
 		switch (currentState) {
 			case IDLE:
 				if (input != null) {
-					if (input.isShooterButtonPressed()) {
+					if (input.isRampToggleButtonPressed()) {
+						rampState = !rampState;
+						return FSMState.IDLE;
+					} else if (input.isIntakeButtonPressed() && input.isShooterButtonPressed()) {
+						return FSMState.INTAKING_AND_SHOOTING;
+					} else if (input.isShooterButtonPressed()) {
 						return FSMState.SHOOTING;
 					} else if (input.isIntakeButtonPressed()) {
 						return FSMState.INTAKING;
-					} else if (input.isRampToggleButtonPressed()) {
-						rampState = !rampState;
 					}
 				}
 				return FSMState.IDLE;
 
 			case SHOOTING:
 				if (input != null) {
-					if (input.isShooterButtonPressed()) {
+					if (input.isIntakeButtonPressed() && input.isShooterButtonPressed()) {
+						return FSMState.INTAKING_AND_SHOOTING;
+					} else if (input.isShooterButtonPressed()) {
 						return FSMState.SHOOTING;
+					} else if (input.isIntakeButtonPressed()) {
+						return FSMState.INTAKING;
 					}
 				}
 				return FSMState.IDLE;
 
 			case INTAKING:
 				if (input != null) {
-					if (input.isIntakeButtonPressed()) {
+					if (input.isIntakeButtonPressed() && input.isShooterButtonPressed()) {
+						return FSMState.INTAKING_AND_SHOOTING;
+					} else if (input.isShooterButtonPressed()) {
+						return FSMState.SHOOTING;
+					} else if (input.isIntakeButtonPressed()) {
 						return FSMState.INTAKING;
 					}
+				}
+				return FSMState.IDLE;
+
+			case INTAKING_AND_SHOOTING:
+				if (input.isIntakeButtonPressed() && input.isShooterButtonPressed()) {
+					return FSMState.INTAKING_AND_SHOOTING;
+				} else if (input.isShooterButtonPressed()) {
+					return FSMState.SHOOTING;
+				} else if (input.isIntakeButtonPressed()) {
+					return FSMState.INTAKING;
 				}
 				return FSMState.IDLE;
 
@@ -197,6 +231,16 @@ public class ShootIntakeFSM {
 		intakeMotor.set(0);
 		transportMotor.set(0);
 	}
+	/**
+		* Handle behavior in SHOOTING.
+		* @param input Global TeleopInput if robot in teleop mode or null if
+		*        the robot is in autonomous mode.
+		*/
+	private void handleIntakingAndShootingState(TeleopInput input) {
+		shooterMotor.set(MOTOR_SHOOTING_POWER);
+		intakeMotor.set(MOTOR_INTAKE_POWER);
+		transportMotor.set(MOTOR_TRANSPORT_POWER);
+	}
 
 
 
@@ -206,7 +250,7 @@ public class ShootIntakeFSM {
 		*        the robot is in autonomous mode.
 		*/
 	private void handleRemainingSystem(TeleopInput input){
-		if(rampState) {
+		if (rampState) {
 			armActuator.set(true);
 		} else {
 			armActuator.set(false);
