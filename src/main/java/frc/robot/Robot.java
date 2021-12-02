@@ -5,9 +5,9 @@ package frc.robot;
 
 // WPILib Imports
 import edu.wpi.first.wpilibj.TimedRobot;
-
 // Systems
 import frc.robot.systems.ShootIntakeFSM;
+import frc.robot.systems.DriveFSMSystem;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -18,6 +18,7 @@ public class Robot extends TimedRobot {
 
 	// Systems
 	private ShootIntakeFSM fsmSystem;
+	private DriveFSMSystem driveFsmSystem;
 
 	/**
 	 * This function is run when the robot is first started up and should be used for any
@@ -30,28 +31,29 @@ public class Robot extends TimedRobot {
 
 		// Instantiate all systems here
 		fsmSystem = new ShootIntakeFSM();
+		driveFsmSystem = new DriveFSMSystem();
 	}
 
 	@Override
 	public void autonomousInit() {
 		System.out.println("-------- Autonomous Init --------");
-		fsmSystem.reset();
+		driveFsmSystem.reset();
 	}
 
 	@Override
 	public void autonomousPeriodic() {
-		fsmSystem.update(null);
+		driveFsmSystem.update(null);
 	}
 
 	@Override
 	public void teleopInit() {
 		System.out.println("-------- Teleop Init --------");
-		fsmSystem.reset();
+		driveFsmSystem.reset();
 	}
 
 	@Override
 	public void teleopPeriodic() {
-		fsmSystem.update(input);
+		driveFsmSystem.update(input);
 	}
 
 	@Override
@@ -81,7 +83,9 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
-	public void simulationPeriodic() { }
+	public void simulationPeriodic() {
+		//DriveFSMSystem.sim1.setVoltage(1);
+	}
 
 	// Do not use robotPeriodic. Use mode specific periodic methods instead.
 	@Override
