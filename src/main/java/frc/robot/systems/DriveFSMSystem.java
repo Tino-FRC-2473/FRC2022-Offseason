@@ -334,6 +334,7 @@ public class DriveFSMSystem {
 		robotYPosLine += dY;
 
 		prevEncoderPosLine = currentEncoderPos;
+		System.out.println("Line: (" + robotXPosLine + ", " + robotYPosLine + ")");
 	}
 
 	private void updateArcOdometry() {
@@ -355,5 +356,7 @@ public class DriveFSMSystem {
 
 		prevGyroAngle = adjustedAngle;
 		prevEncoderPosArc = currentEncoderPos;
+		System.out.println("Arc: (" + robotXPosArc + ", " + robotYPosArc + ")");
+
 	}
 }

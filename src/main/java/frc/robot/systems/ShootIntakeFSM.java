@@ -3,10 +3,12 @@ package frc.robot.systems;
 // WPILib Imports
 
 // Third party Hardware Imports
-import net.thefletcher.revrobotics.CANSparkMax;
-import net.thefletcher.revrobotics.enums.MotorType;
+// import net.thefletcher.revrobotics.CANSparkMax;
+// import net.thefletcher.revrobotics.enums.MotorType;
+
 // Above imports are for simulation purposes, replace with bottom when building to run
-// import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.Solenoid;
 // Robot Imports
