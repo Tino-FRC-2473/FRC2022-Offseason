@@ -20,6 +20,7 @@ public class DriveFSMSystem {
 	private static final double TURN_ERROR_POWER_RATIO = 360;
 	private static final double MIN_TURN_POWER = 0.1;
 	private static final double TURN_ERROR_THRESHOLD_DEGREE = 1.0;
+	private static final double TELEOP_ACCELERATION_CONSTANT = 20;
 	private static final double COUNTS_PER_MOTOR_REVOLUTION = 42;
 	private static final double GEAR_RATIO = 26.0 * 4.67 / 12.0;
 	private static final double DRIVE_TICKS_PER_INCH
@@ -49,6 +50,8 @@ public class DriveFSMSystem {
 	private double robotXPosArc = 0;
 	private double robotYPosArc = 0;
 	private double prevGyroAngle = 0;
+	private double leftPower = 0;
+	private double rightPower = 0;
 
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
@@ -285,11 +288,19 @@ public class DriveFSMSystem {
 		double joystickZ = input.getDrivingJoystickZ();
 		double steerAngle = -input.getSteerAngle();
 
-		double leftPower = -joystickZ * (1 + steerAngle);
-		double rightPower = joystickZ * (1 - steerAngle);
+		double targetLeftPower = limitPower(-joystickZ * (1 + steerAngle));
+		double targetRightPower = limitPower(joystickZ * (1 - steerAngle));
 
-		leftPower = limitPower(leftPower);
-		rightPower = limitPower(rightPower);
+		leftPower += (targetLeftPower - leftPower) / TELEOP_ACCELERATION_CONSTANT;
+		rightPower += (targetRightPower - rightPower) / TELEOP_ACCELERATION_CONSTANT;
+
+		if (Math.abs(leftPower) < 0.05) {
+			leftPower = 0;
+		}
+
+		if (Math.abs(rightPower) < 0.05) {
+			rightPower = 0;
+		}
 
 		System.out.println("Driving Stick: " + joystickZ);
 		System.out.println("Steering Wheel: " + steerAngle);
