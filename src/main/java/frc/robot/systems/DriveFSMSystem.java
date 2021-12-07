@@ -17,10 +17,11 @@ public class DriveFSMSystem {
 	public static final double KP_MOVE_STRAIGHT = 0.1;
 	public static final double ERR_THRESHOLD_STRAIGHT_IN = 0.1;
 	private static final double TELEOP_ANGLE_POWER_RATIO = 90.0;
+	private static final double PROPORTION_MAX_POWER = 0.5;
 	private static final double TURN_ERROR_POWER_RATIO = 360;
 	private static final double MIN_TURN_POWER = 0.1;
 	private static final double TURN_ERROR_THRESHOLD_DEGREE = 1.0;
-	private static final double TELEOP_ACCELERATION_CONSTANT = 20;
+	private static final double TELEOP_ACCELERATION_CONSTANT = 10;
 	private static final double COUNTS_PER_MOTOR_REVOLUTION = 42;
 	private static final double GEAR_RATIO = 26.0 * 4.67 / 12.0;
 	private static final double DRIVE_TICKS_PER_INCH
@@ -285,14 +286,16 @@ public class DriveFSMSystem {
 			return;
 		}
 
-		double joystickZ = input.getDrivingJoystickZ();
-		double steerAngle = -input.getSteerAngle();
+		double joystickY = input.getDrivingJoystickY();
+		double steerAngle = input.getSteerAngle();
 
-		double targetLeftPower = limitPower(-joystickZ * (1 + steerAngle));
-		double targetRightPower = limitPower(joystickZ * (1 - steerAngle));
+		double targetLeftPower = limitPower(joystickY * (1 + steerAngle)) * PROPORTION_MAX_POWER;
+		double targetRightPower = limitPower(-joystickY * (1 - steerAngle)) * PROPORTION_MAX_POWER;
 
-		leftPower += (targetLeftPower - leftPower) / TELEOP_ACCELERATION_CONSTANT;
-		rightPower += (targetRightPower - rightPower) / TELEOP_ACCELERATION_CONSTANT;
+		leftPower = targetLeftPower;
+		rightPower = targetRightPower;
+		// leftPower += (targetLeftPower - leftPower) / TELEOP_ACCELERATION_CONSTANT;
+		// rightPower += (targetRightPower - rightPower) / TELEOP_ACCELERATION_CONSTANT;
 
 		if (Math.abs(leftPower) < 0.05) {
 			leftPower = 0;
@@ -302,7 +305,7 @@ public class DriveFSMSystem {
 			rightPower = 0;
 		}
 
-		System.out.println("Driving Stick: " + joystickZ);
+		System.out.println("Driving Stick: " + joystickY);
 		System.out.println("Steering Wheel: " + steerAngle);
 		System.out.println("Left power: " + leftPower);
 		System.out.println("Right Power: " + rightPower);
@@ -325,7 +328,7 @@ public class DriveFSMSystem {
 
 	private void updateLineOdometry() {
 		double adjustedAngle = 90 - rawGyroAngle;
-		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition()
+		double currentEncoderPos = ((-frontLeftMotor.getEncoder().getPosition()
 			+ frontRightMotor.getEncoder().getPosition()) / 2.0);
 		double dEncoder = (currentEncoderPos - prevEncoderPosLine) / DRIVE_TICKS_PER_INCH;
 		double dX = dEncoder * Math.sin(Math.toRadians(adjustedAngle));
@@ -334,13 +337,14 @@ public class DriveFSMSystem {
 		robotYPosLine += dY;
 
 		prevEncoderPosLine = currentEncoderPos;
+		System.out.println("Raw Encoder Value: " + currentEncoderPos);
 		System.out.println("Line: (" + robotXPosLine + ", " + robotYPosLine + ")");
 	}
 
 	private void updateArcOdometry() {
 		double adjustedAngle = 90 - rawGyroAngle;
 		double theta = Math.abs(adjustedAngle - prevGyroAngle);
-		double currentEncoderPos = ((frontLeftMotor.getEncoder().getPosition()
+		double currentEncoderPos = ((-frontLeftMotor.getEncoder().getPosition()
 			+ frontRightMotor.getEncoder().getPosition()) / 2.0);
 		double arcLength = (currentEncoderPos - prevEncoderPosArc) / DRIVE_TICKS_PER_INCH;
 		if (Math.abs(theta) < ODOMETRY_MIN_THETA) {

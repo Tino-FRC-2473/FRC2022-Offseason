@@ -114,8 +114,8 @@ public class TeleopInput {
 	 * Get Y value of Driving Joystick.
 	 * @return Y-Axis value
 	 */
-	public double getDrivingJoystickZ() {
-		return drivingJoystick.getZ();
+	public double getDrivingJoystickY() {
+		return drivingJoystick.getY();
 	}
 
 	/* ======================== Private methods ======================== */
