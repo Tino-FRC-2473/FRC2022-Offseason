@@ -2,6 +2,7 @@ package frc.robot.systems;
 
 // WPILib Imports
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.Timer;
 
 // Third party Hardware Imports
 import com.revrobotics.CANSparkMax;
@@ -24,8 +25,8 @@ public class DriveFSMSystem {
 	private static final double TELEOP_ACCELERATION_CONSTANT = 10;
 	private static final double COUNTS_PER_MOTOR_REVOLUTION = 42;
 	private static final double GEAR_RATIO = 26.0 * 4.67 / 12.0;
-	private static final double DRIVE_TICKS_PER_INCH
-		= COUNTS_PER_MOTOR_REVOLUTION * GEAR_RATIO / (Math.PI * WHEEL_DIAMETER_INCHES);
+	private static final double REVOLUTIONS_PER_INCH
+		= GEAR_RATIO / (Math.PI * WHEEL_DIAMETER_INCHES);
 	private static final double ODOMETRY_MIN_THETA = 1.0;
 
 	// FSM state definitions
@@ -53,6 +54,8 @@ public class DriveFSMSystem {
 	private double prevGyroAngle = 0;
 	private double leftPower = 0;
 	private double rightPower = 0;
+	private Timer timer;
+	private double currentTime = 0;
 
 	// Hardware devices should be owned by one and only one system. They must
 	// be private to their owner system and may not be used elsewhere.
@@ -83,6 +86,8 @@ public class DriveFSMSystem {
 											CANSparkMax.MotorType.kBrushless);
 
 		gyro = new AHRS(SPI.Port.kMXP);
+
+		timer = new Timer();
 
 		// Reset state machine
 		reset();
@@ -119,6 +124,8 @@ public class DriveFSMSystem {
 
 		currentState = FSMState.TELEOP_STATE;
 
+		timer.reset();
+
 		// Call one tick of update to ensure outputs reflect start state
 		update(null);
 	}
@@ -129,6 +136,9 @@ public class DriveFSMSystem {
 	 *        the robot is in autonomous mode.
 	 */
 	public void update(TeleopInput input) {
+		double updatedTime = timer.get();
+		System.out.println("DTime: " + (updatedTime - currentTime));
+		currentTime = updatedTime;
 		rawGyroAngle = gyro.getAngle();
 		updateLineOdometry();
 		updateArcOdometry();
@@ -330,9 +340,9 @@ public class DriveFSMSystem {
 		double adjustedAngle = 90 - rawGyroAngle;
 		double currentEncoderPos = ((-frontLeftMotor.getEncoder().getPosition()
 			+ frontRightMotor.getEncoder().getPosition()) / 2.0);
-		double dEncoder = (currentEncoderPos - prevEncoderPosLine) / DRIVE_TICKS_PER_INCH;
-		double dX = dEncoder * Math.sin(Math.toRadians(adjustedAngle));
-		double dY = dEncoder * Math.cos(Math.toRadians(adjustedAngle));
+		double dEncoder = (currentEncoderPos - prevEncoderPosLine) / REVOLUTIONS_PER_INCH;
+		double dX = dEncoder * Math.cos(Math.toRadians(adjustedAngle));
+		double dY = dEncoder * Math.sin(Math.toRadians(adjustedAngle));
 		robotXPosLine += dX;
 		robotYPosLine += dY;
 
@@ -346,7 +356,7 @@ public class DriveFSMSystem {
 		double theta = Math.abs(adjustedAngle - prevGyroAngle);
 		double currentEncoderPos = ((-frontLeftMotor.getEncoder().getPosition()
 			+ frontRightMotor.getEncoder().getPosition()) / 2.0);
-		double arcLength = (currentEncoderPos - prevEncoderPosArc) / DRIVE_TICKS_PER_INCH;
+		double arcLength = (currentEncoderPos - prevEncoderPosArc) / REVOLUTIONS_PER_INCH;
 		if (Math.abs(theta) < ODOMETRY_MIN_THETA) {
 			theta = 1;
 		}
