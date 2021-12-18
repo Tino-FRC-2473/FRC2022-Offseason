@@ -138,8 +138,8 @@ public class SerialDecoder {
 				return;
 			}
 
-			String rawPackets = incomingData.substring(startIndex + 7, endIndex - 1);
-			incomingData = incomingData.substring(endIndex + 8);
+			String rawPackets = incomingData.substring(startIndex + "[Open]\n".length(), endIndex - 1);
+			incomingData = incomingData.substring(endIndex + "[Close]\n".length());
 
 			try {
 				int numPackets = 1;
@@ -240,8 +240,9 @@ class Data {
 
 			default:
 				sc.close();
-				throw new IllegalArgumentException("Data Type is Unrecognized, recieved type \"" +
-				type + "\"");
+				throw new IllegalArgumentException("Data Type is Unrecognized, recieved type \""
+				+ type
+				+ "\"");
 		}
 
 	}
