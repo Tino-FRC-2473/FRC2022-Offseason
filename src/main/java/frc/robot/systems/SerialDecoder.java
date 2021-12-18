@@ -138,8 +138,10 @@ public class SerialDecoder {
 				return;
 			}
 
-			String rawPackets = incomingData.substring(startIndex + "[Open]\n".length(), endIndex - 1);
-			incomingData = incomingData.substring(endIndex + "[Close]\n".length());
+			String rawPackets = incomingData.substring(startIndex
+				+ "[Open]\n".length(), endIndex - 1);
+			incomingData = incomingData.substring(endIndex
+				+ "[Close]\n".length());
 
 			try {
 				int numPackets = 1;
