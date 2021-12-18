@@ -229,10 +229,11 @@ class Data {
 					y = Integer.parseInt(yStr);
 					r = Integer.parseInt(rStr);
 				} catch (NumberFormatException e) {
-					throw new IllegalArgumentException("Recieved invalid numerical data. Received:\n" +
-					"x = " + xStr + "\n" +
-					"y = " + yStr + "\n" +
-					"r = " + rStr);
+					throw new IllegalArgumentException("Recieved invalid numerical data."
+					+ "Received:\n"
+					+ "x = " + xStr + "\n"
+					+ "y = " + yStr + "\n"
+					+ "r = " + rStr);
 				}
 
 				return new Circle(x, y, r);
@@ -254,17 +255,17 @@ class Circle extends Data {
 
 	private final int r;
 
-	public Circle(int x, int y, int r) {
-		this.x = x;
-		this.y = y;
-		this.r = r;
+	Circle(int nx, int ny, int nr) {
+		x = nx;
+		y = ny;
+		r = nr;
 	}
 
 	/**
 	 * The X position of this detected circle.
 	 * @return x position of this detected circle
 	 */
-	public int getX(){
+	public int getX() {
 		return x;
 	}
 
@@ -272,7 +273,7 @@ class Circle extends Data {
 	 * The Y position of this detected circle.
 	 * @return y position of this detected circle
 	 */
-	public int getY(){
+	public int getY() {
 		return y;
 	}
 
@@ -280,7 +281,7 @@ class Circle extends Data {
 	 * The radius of this detected circle.
 	 * @return radius of this detected circle
 	 */
-	public int getR(){
+	public int getR() {
 		return r;
 	}
 }
