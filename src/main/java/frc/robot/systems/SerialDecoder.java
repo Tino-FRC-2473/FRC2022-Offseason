@@ -12,7 +12,7 @@ public class SerialDecoder {
 	/* ======================== Constants ======================== */
 	// FSM state definitions
 	public enum FSMState {
-		IDLE, 
+		IDLE,
 		LISTENING
 	}
 
@@ -110,12 +110,11 @@ public class SerialDecoder {
 	private void handleIdleState(TeleopInput input) {
 	}
 	/**
-	 * Handle behavior in LISTENING. This method will see if the system has received a new full message from the jetson, and if so, it parses and translates the most recent, full, completed message to a Data[], and sets the active data to this new data array.
-	 * @param input Global TeleopInput if robot in teleop mode or null if
-	 *        the robot is in autonomous mode.
-	 */
-
-	/** example value for the variable incomingData:
+	 * Handle behavior in LISTENING.
+	 * This method will see if the system has received a new full message from the jetson, and
+	 * if so, it parses and translates the most recent, full, completed message to a Data[],
+	 * and sets the active data to this new data array.
+	 * Example value for the variable incomingData:
 	 * "
 	 * [Open]
 	 * [Circle 234 23 2]
@@ -127,10 +126,11 @@ public class SerialDecoder {
 	 * [Open]
 	 * [Ci
 	 * "
-	 * 
+	 * @param input Global TeleopInput if robot in teleop mode or null if
+	 *        the robot is in autonomous mode.
 	 */
 	private void handleListeningState(TeleopInput input) {
-		while(true){
+		while (true) {
 			int startIndex = incomingData.indexOf("[Open]");
 			int endIndex = incomingData.indexOf("[Close]");
 
@@ -140,19 +140,19 @@ public class SerialDecoder {
 
 			String rawPackets = incomingData.substring(startIndex + 7, endIndex - 1);
 			incomingData = incomingData.substring(endIndex + 8);
-			
+
 			try {
 				int numPackets = 1;
-				for(int i = 0; i < rawPackets.length(); i++){
-					if(rawPackets.charAt(i) == '\n'){
+				for (int i = 0; i < rawPackets.length(); i++) {
+					if (rawPackets.charAt(i) == '\n') {
 						numPackets++;
 					}
 				}
-
 				Data[] parsedData = new Data[numPackets];
-				
-				for(int i = 0; i < numPackets; i++){
-					parsedData[i] = Data.stringToData(rawPackets.substring(0, rawPackets.indexOf("\n")));
+				for (int i = 0; i < numPackets; i++) {
+					parsedData[i] = Data.stringToData(
+						rawPackets.substring(0, rawPackets.indexOf("\n"))
+						);
 				}
 
 				currentData = parsedData;
@@ -162,18 +162,30 @@ public class SerialDecoder {
 		}
 	}
 
+	/**
+	 * Recieves string input from serial communication/
+	 * @param str Raw data sent by serial bus
+	 */
 	public void onData(String str){
 		incomingData += str;
 	}
 
+	/**
+	 * Returns most recent parsed data sent by Jetson
+	 * @return Most recent parsed CV data sent by Jetson
+	 */
 	public Data[] getData(){
 		return currentData.clone();
 	}
 
-	public Circle[] getCircles(){
+	/**
+	 * Returns most recent parsed data sent by Jetson, containing Circles
+	 * @return Most recent parsed CV data sent by Jetson containg Circles
+	 */
+	public Circle[] getCircles() {
 		int c = 0;
-		for(Data d : currentData){
-			if(d instanceof Circle){
+		for (Data d : currentData) {
+			if (d instanceof Circle) {
 				c++;
 			}
 		}
@@ -181,8 +193,8 @@ public class SerialDecoder {
 		Circle[] circles = new Circle[c];
 
 		c = 0;
-		for(Data d : currentData){
-			if(d instanceof Circle){
+		for (Data d : currentData) {
+			if (d instanceof Circle) {
 				circles[c] = (Circle) d;
 				c++;
 			}
@@ -193,7 +205,7 @@ public class SerialDecoder {
 }
 
 class Data {
-	public static Data stringToData(String str) throws IllegalArgumentException { // "[Circle 230 320 16]""
+	public static Data stringToData(String str) throws IllegalArgumentException {
 		str = str.substring(1, str.length() - 1);
 
 		Scanner sc = new Scanner(str);
@@ -205,7 +217,7 @@ class Data {
 				String xStr = sc.next();
 				String yStr = sc.next();
 				String rStr = sc.next();
-				
+
 				sc.close();
 
 				int x, y, r;
@@ -219,12 +231,12 @@ class Data {
 				}
 
 				return new Circle(x, y, r);
-			
+
 			default:
 				sc.close();
 				throw new IllegalArgumentException("Data Type is Unrecognized, recieved type \"" + type + "\"");
 		}
-		
+
 	}
 }
 
@@ -236,7 +248,7 @@ class Circle extends Data {
 
 	public final int r;
 
-	public Circle(int x, int y, int r){
+	public Circle (int x, int y, int r) {
 		this.x = x;
 		this.y = y;
 		this.r = r;
