@@ -163,23 +163,23 @@ public class SerialDecoder {
 	}
 
 	/**
-	 * Recieves string input from serial communication/
+	 * Recieves string input from serial communication.
 	 * @param str Raw data sent by serial bus
 	 */
-	public void onData(String str){
+	public void onData(String str) {
 		incomingData += str;
 	}
 
 	/**
-	 * Returns most recent parsed data sent by Jetson
+	 * Returns most recent parsed data sent by Jetson.
 	 * @return Most recent parsed CV data sent by Jetson
 	 */
-	public Data[] getData(){
+	public Data[] getData() {
 		return currentData.clone();
 	}
 
 	/**
-	 * Returns most recent parsed data sent by Jetson, containing Circles
+	 * Returns most recent parsed data sent by Jetson, containing Circles.
 	 * @return Most recent parsed CV data sent by Jetson containg Circles
 	 */
 	public Circle[] getCircles() {
@@ -220,21 +220,27 @@ class Data {
 
 				sc.close();
 
-				int x, y, r;
+				int x;
+				int y;
+				int r;
 
 				try {
 					x = Integer.parseInt(xStr);
 					y = Integer.parseInt(yStr);
 					r = Integer.parseInt(rStr);
-				} catch(NumberFormatException e) {
-					throw new IllegalArgumentException("Recieved invalid numerical data. Received:\nx = " + xStr + "\ny = " + yStr + "\nr = " + rStr);
+				} catch (NumberFormatException e) {
+					throw new IllegalArgumentException("Recieved invalid numerical data. Received:\n" +
+					"x = " + xStr + "\n" +
+					"y = " + yStr + "\n" +
+					"r = " + rStr);
 				}
 
 				return new Circle(x, y, r);
 
 			default:
 				sc.close();
-				throw new IllegalArgumentException("Data Type is Unrecognized, recieved type \"" + type + "\"");
+				throw new IllegalArgumentException("Data Type is Unrecognized, recieved type \"" +
+				type + "\"");
 		}
 
 	}
@@ -242,16 +248,39 @@ class Data {
 
 class Circle extends Data {
 
-	public final int x;
+	private final int x;
 
-	public final int y;
+	private final int y;
 
-	public final int r;
+	private final int r;
 
-	public Circle (int x, int y, int r) {
+	public Circle(int x, int y, int r) {
 		this.x = x;
 		this.y = y;
 		this.r = r;
 	}
 
+	/**
+	 * The X position of this detected circle.
+	 * @return x position of this detected circle
+	 */
+	public int getX(){
+		return x;
+	}
+
+	/**
+	 * The Y position of this detected circle.
+	 * @return y position of this detected circle
+	 */
+	public int getY(){
+		return y;
+	}
+
+	/**
+	 * The radius of this detected circle.
+	 * @return radius of this detected circle
+	 */
+	public int getR(){
+		return r;
+	}
 }
