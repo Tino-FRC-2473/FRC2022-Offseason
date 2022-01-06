@@ -138,26 +138,27 @@ public class SerialDecoder {
 				return;
 			}
 
-			String rawPackets = incomingData.substring(startIndex
+			String payload = incomingData.substring(startIndex
 				+ "[Open]\n".length(), endIndex - 1);
 			incomingData = incomingData.substring(endIndex
 				+ "[Close]\n".length());
 
 			try {
-				int numPackets = 1;
-				for (int i = 0; i < rawPackets.length(); i++) {
-					if (rawPackets.charAt(i) == '\n') {
-						numPackets++;
+				int numDataPoints = 1;
+				for (int i = 0; i < payload.length(); i++) {
+					if (payload.charAt(i) == '\n') {
+						numDataPoints++;
 					}
 				}
-				Data[] parsedData = new Data[numPackets];
-				for (int i = 0; i < numPackets; i++) {
-					parsedData[i] = Data.stringToData(
-						rawPackets.substring(0, rawPackets.indexOf("\n"))
+				Data[] parsedDataPoints = new Data[numDataPoints];
+				for (int i = 0; i < numDataPoints; i++) {
+					parsedDataPoints[i] = Data.stringToData(
+						payload.substring(0, payload.indexOf("\n"))
 						);
+					payload = payload.substring(payload.indexOf("\n") + 1);
 				}
 
-				currentData = parsedData;
+				currentData = parsedDataPoints;
 			} catch (Exception e) {
 				System.out.println(e);
 			}
@@ -194,11 +195,9 @@ public class SerialDecoder {
 
 		Circle[] circles = new Circle[c];
 
-		c = 0;
 		for (Data d : currentData) {
 			if (d instanceof Circle) {
 				circles[c] = (Circle) d;
-				c++;
 			}
 		}
 		return circles;
